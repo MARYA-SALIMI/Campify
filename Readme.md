@@ -16,8 +16,8 @@ Sosyal Medya
 
 ## Proje Linkleri
 
-- **REST API Adresi:** [api.yazmuh.com](https://api.yazmuh.com)
-- **Web Frontend Adresi:** [frontend.yazmuh.com](https://frontend.yazmuh.com)
+- **REST API Adresi:** 
+- **Web Frontend Adresi:** 
 
 ---
 
