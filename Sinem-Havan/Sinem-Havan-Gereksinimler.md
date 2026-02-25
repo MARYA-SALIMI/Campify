@@ -15,9 +15,9 @@
    - **Açıklama:** Kullanıcının yayınladığı bir gönderiyi sistemden kalıcı olarak kaldırır.
 
 5. **Mesaj Gönderme**
-   - **API Metodu:** `POST /messages`
+   - **API Metodu:** ` POST /chats/{chatId}/messages`
    - **Açıklama:** Kullanıcının başka bir kullanıcıya özel mesaj göndermesini sağlar. 
 
 6. **Sohbet Listeleme**
-    - **API Metodu:** `GET /messages/{userId}`
+    - **API Metodu:** `GET /chats/{chatId}/messages`
     - **Açıklama:** Giriş yapmış kullanıcının belirli bir kullanıcıyla yaptığı tüm mesajlaşmaları listeler.
