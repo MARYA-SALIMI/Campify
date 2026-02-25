@@ -4,7 +4,7 @@
 
 ## Proje Hakkında
 
-![Ürün Tanıtım Görseli](Campi.jpeg)
+![Ürün Tanıtım Görseli](Campi.jpg)
 
 **Proje Tanımı:** 
 *Campify*, üniversite ekosistemindeki akademik ve sosyal süreçleri tek bir entegre platform altında toplayan, yapay zeka destekli bir dijital kampüs çözümüdür. Dağınık ve verimsiz ilerleyen öğrenci etkileşimlerini merkezi bir yapıya dönüştürerek; ders materyali alışverişinden yetenek eşleştirmeye, proje ekip oluşturma süreçlerinden kampüs içi iletişime kadar tüm ihtiyaçları veri odaklı algoritmalarla optimize eder. Akademik profiller ve ilgi alanları üzerinden çalışan akıllı eşleştirme sistemi sayesinde doğru kişileri doğru fırsatlarla buluşturarak kampüs içi verimliliği artırır, iş birliğini güçlendirir ve üniversiteler için ölçeklenebilir bir dijital ekosistem altyapısı sunar
