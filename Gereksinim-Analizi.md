@@ -13,6 +13,6 @@
 # Gereksinim Dağılımları
 
 1. [Marya Salimi - Proje Gereksinim Analizi](Marya-Salimi/Marya-Salimi-Gereksinimler.md)
-2. [Grup Üyesi 2'nin Gereksinimleri](Grup-Uyesi-2/Grup-Uyesi-2-Gereksinimler.md)
-3. [Grup Üyesi 3'ün Gereksinimleri](Grup-Uyesi-3/Grup-Uyesi-3-Gereksinimler.md)
-4. [Grup Üyesi 4'ün Gereksinimleri](Grup-Uyesi-4/Grup-Uyesi-4-Gereksinimler.md)
+2. [Sinem Havan  - Proje Gereksinim Analizi](Sinem-Havan/Sinem-Havan-Gereksinimler.md)
+3. [Emine Türkoğlu - Proje Gereksinim Analizi](Emine-Türkoğlu/Emine-Türkoğlu-Gereksinimler.md)
+4. [Melisa-Öztaş- Proje Gereksinim Analizi](Melisa-Öztaş/Melisa-Öztaş-Gereksinimler.md)
