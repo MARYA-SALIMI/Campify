@@ -9,6 +9,12 @@
 4. **Profil Görüntüleme** (Marya Salimi)
 5. **Profil Güncelleme** (Marya Salimi)
 6. **Hesap Silme** (Marya Salimi)
+19. **Ekip İlanı Oluşturma** (Emine Türkoğlu)
+20. **Ekip İlanlarını Listeleme** (Emine Türkoğlu)
+21. **Ekip İlanlarını Güncelleme** (Emine Türkoğlu)
+22. **Ekip İlanı Silme** (Emine Türkoğlu)
+23. **Ekibe Katılma** (Emine Türkoğlu)
+24. **Ekipten Ayrılma** (Emine Türkoğlu)
 
 # Gereksinim Dağılımları
 
