@@ -1,9 +1,9 @@
 1. **Yorum Ekleme**
-   - **API Metodu:** `POST /posts/{postId}`
+   - **API Metodu:** `POST /posts/{postId}/comments`
    - **Açıklama:** Kullanıcının bir gönderiye yorum yazmasını sağlar.
 
 2. **Yorum Listeleme**
-   - **API Metodu:** `GET /posts/{postId}`
+   - **API Metodu:** `GET /posts/{postId}/comments`
    - **Açıklama:** Bir gönderiye yapılmış tüm yorumları eklenme tarihine göre sıralı olarak listeler.Her yorum için yazar adı, profil bilgisi ve tarih döner.
 
 3. **Yorum Güncelleme**
