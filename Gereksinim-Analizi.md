@@ -1,6 +1,5 @@
 # Gereksinim Analizi
 
-```
 
 # Tüm Gereksinimler 
 
