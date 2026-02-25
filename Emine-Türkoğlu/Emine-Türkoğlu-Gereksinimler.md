@@ -1,15 +1,23 @@
-1. **Üye Olma**
-   - **API Metodu:** `POST /auth/register`
-   - **Açıklama:** Kullanıcıların yeni hesaplar oluşturarak sisteme kayıt olmasını sağlar. Kişisel bilgilerin toplanmasını ve hesap oluşturma işlemlerini içerir. Kullanıcılar email adresi ve şifre belirleyerek hesap oluşturur.
+1. **Ekip İlanı Oluşturma**
+   - **API Metodu:** `POST/teams`
+   - **Açıklama:** Kullanıcının yeni bir ekip ilanı oluşturmasını sağlar. İlan; ekip adı, açıklama, aranan yetkinlikler ve gerekli diğer bilgileri içerir.
 
-2. **Profil Görüntüleme**
-   - **API Metodu:** `GET /users/{userId}`
-   - **Açıklama:** Kullanıcının profil bilgilerini görüntülemesini sağlar. Kullanıcı adı, email, telefon gibi kişisel bilgiler ve hesap durumu gösterilir. Kullanıcılar kendi profil bilgilerini görüntüleyebilir veya yöneticiler diğer kullanıcıların bilgilerini inceleyebilir. Güvenlik için giriş yapmış olmak gerekir.
+2. **Ekip İlanlarını Listeleme**
+   - **API Metodu:** `GET/teams`
+   - **Açıklama:** Sistemde mevcut olan ekip ilanlarını listeler. Kullanıcılar ilanları görüntüleyebilir ve kendilerine uygun ekipleri inceleyebilir.
 
-3. **Profil Güncelleme**
-   - **API Metodu:** `PUT /users/{userId}`
-   - **Açıklama:** Kullanıcının profil bilgilerini güncellemesini sağlar. Kullanıcılar ad, soyad, email, telefon gibi kişisel bilgilerini değiştirebilir. Güvenlik için giriş yapmış olmak gerekir ve kullanıcılar yalnızca kendi bilgilerini güncelleyebilir.
+3. **Ekip İlanı Güncelleme**
+   - **API Metodu:** `PUT/teams/{teamID}`
+   - **Açıklama:** Kullanıcının oluşturduğu ekip ilanını güncellemesini sağlar. İlan detayları (açıklama, yetkinlikler vb.) değiştirilebilir.
 
-4. **Hesap Silme**
-   - **API Metodu:** `DELETE /users/{userId}`
-   - **Açıklama:** Kullanıcının hesabını sistemden kalıcı olarak silmesini sağlar. Kullanıcı hesabını kapatmak istediğinde veya yönetici tarafından hesap kapatılması gerektiğinde kullanılır. Bu işlem geri alınamaz ve kullanıcının tüm verileri silinir. Güvenlik için giriş yapmış olmak gerekir.
+4. **Ekip İlanı Silme**
+   - **API Metodu:** `DELETE/teams/{teamId}`
+   - **Açıklama:** Kullanıcının oluşturduğu ekip ilanını sistemden kaldırmasını sağlar. Silinen ilan diğer kullanıcılar tarafından görüntülenemez.
+
+5. **Ekibe Katılma**
+   - **API Metodu:** `POST/teams/{teamId}/join`
+   - **Açıklama:** Kullanıcının seçilen ekibe katılmasını veya katılım talebi göndermesini sağlar.
+
+6. **Ekipten Ayrılma**
+   - **API Metodu:** `DELETE/teams/{teamId}/leave`
+   - **Açıklama:**  Kullanıcının üyesi olduğu ekipten ayrılmasını sağlar. Kullanıcı ekip üyeliğini sonlandırır.
