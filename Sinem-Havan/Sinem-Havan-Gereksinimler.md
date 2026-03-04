@@ -19,5 +19,5 @@
    - **Açıklama:** Kullanıcının başka bir kullanıcıya özel mesaj göndermesini sağlar. 
 
 6. **Sohbet Listeleme**
-    - **API Metodu:** `GET /chats/{chatId}/messages`
+    - **API Metodu:** `GET /chats`
     - **Açıklama:** Giriş yapmış kullanıcının belirli bir kullanıcıyla yaptığı tüm mesajlaşmaları listeler.
