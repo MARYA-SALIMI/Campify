@@ -1,12 +1,3 @@
-# API Tasarımı - OpenAPI Specification Örneği
-
-**OpenAPI Spesifikasyon Dosyası:** [CampifyAPI.yaml](CampifyAPI.yaml)
-
-Bu doküman, OpenAPI Specification (OAS) 3.0 standardına göre hazırlanmış örnek bir API tasarımını içermektedir.
-
-## OpenAPI Specification
-
-```yaml
 openapi: 3.0.3
 info:
   title: Campify API
@@ -49,8 +40,6 @@ tags:
     description: Ekip ilanı oluşturma, listeleme, güncelleme, silme ve ekibe katılma/ayrılma işlemleri
   - name: Yorumlar
     description: Gönderilere yapılan yorum işlemleri (ekleme, listeleme, güncelleme, silme)
-  - name: Sohbet
-    description: Kullanıcılar arası özel mesajlaşma ve sohbet işlemleri
 
 paths:
   /auth/register:
@@ -901,7 +890,7 @@ paths:
   /chats:
     post:
       tags:
-        - Sohbet
+        - Mesajlar
       summary: Sohbet Oluşturma
       description: Kullanıcılar arasında özel bir mesajlaşma kanalı açar.
       operationId: createChat
@@ -918,7 +907,7 @@ paths:
   /messages/{messageId}:
     delete:
       tags:
-        - Sohbet
+        - Mesajlar
       summary: Mesaj Silme
       description: Belirli bir mesajı kaldırır.
       operationId: deleteMessage
@@ -1445,5 +1434,3 @@ components:
               value:
                 code: "FORBIDDEN"
                 message: "Bu işlem için yetkiniz bulunmamaktadır"
-
-``
