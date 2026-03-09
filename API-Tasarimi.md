@@ -1,3 +1,12 @@
+# API Tasarımı - OpenAPI Specification Örneği
+
+**OpenAPI Spesifikasyon Dosyası:** [CampifyAPI.yaml](CampifyAPI.yaml)
+
+Bu doküman, OpenAPI Specification (OAS) 3.0 standardına göre hazırlanmış örnek bir API tasarımını içermektedir.
+
+## OpenAPI Specification
+
+```yaml
 openapi: 3.0.3
 info:
   title: Campify API
@@ -1434,3 +1443,5 @@ components:
               value:
                 code: "FORBIDDEN"
                 message: "Bu işlem için yetkiniz bulunmamaktadır"
+
+``
