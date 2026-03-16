@@ -20,7 +20,7 @@ info:
     email: support@campify.edu.tr
 
 servers:
-  - url: https://api.campify.edu.tr/v1
+  - url: https://campify-api.onrender.com/v1
     description: Production server
   - url: https://staging-api.campify.edu.tr/v1
     description: Staging server

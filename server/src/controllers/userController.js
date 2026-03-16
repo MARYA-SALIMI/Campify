@@ -2,7 +2,7 @@ const User = require('../models/User');
 
 exports.getUserProfile = async (req, res, next) => {
   try {
-    const user = await User.findById(req.params.userId).select("-password");
+    const user = await User.findById(req.params.userId);
     if (!user) return res.status(404).json({ code: "NOT_FOUND", message: "İstenen kaynak bulunamadı" });
 
     res.status(200).json({
