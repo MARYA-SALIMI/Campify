@@ -34,7 +34,7 @@ exports.registerUser = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ code: "UNAUTHORIZED", message: "Kimlik doğrulama başarısız" });
 
     const isMatch = await bcrypt.compare(password, user.password);
