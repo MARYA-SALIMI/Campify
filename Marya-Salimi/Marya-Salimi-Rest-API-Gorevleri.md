@@ -13,39 +13,34 @@
   "lastName": "Salimi"
 }
 ```
-- **Response:** `201 Created` 
-
-
- ```
+- **Response:** `201 Created` - Profil bilgileri
+  ```
+  
 ## 2. Giriş Yapma
 - **Endpoint:** `POST /auth/login`
-- **Request Body:**  
-  ```json
-  
+- **Request Body:**
+ ```json 
 {
   "email": "Mar@test.edu",
   "password": "S123!"
 }
-
   ```
-- **Response:** `200 ok`
-
-```
-
+- **Response:** `200 ok` - Token, profil bilgileri
+  ```
+  
 ## 3. Profil Görüntüleme
 - **Endpoint:** `GET /users/{userId}`
 - **Path Parameters:** 
   - `userId` (string, required) - Kullanıcı ID'si
 - **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK`
-
+- **Response:** `200 OK` - Profil bilgileri
 
 
 ## 4. Profil Güncelleme
 - **Endpoint:** `PUT /profile`
  - **Authentication:** Bearer Token gerekli
 - **Request Body:** 
-  ```json
+```json
 {
     "firstName": "Aisha",
     "lastName": "Salimi",
@@ -54,24 +49,29 @@
     "skills": ["swimming", "leadership"]
 }
   ```
-- **Response:** `200 OK` 
+- **Response:** `200 OK` - Güncel profil bilgileri
+  ```
 
-
-```
 ## 5. Çıkış Yapma
 - **Endpoint:** `POST /auth/logout`
-
 - **Authentication:** Bearer Token gerekli
 - **Response:** `200 ok`
-- {"message": "Çıkış başarılı"}
+```json
+{
+"message": "Çıkış başarılı"
+}
+```
 
 ## 6. Hesap Silme
 - **Endpoint:** `DELETE /profile`
 - **Authentication:** Bearer Token gerekli (kendi hesabını silme yetkisi)
 - **Response:** `200 ok`
-- {
-    "message": "User deleted successfully"
+```json
+{
+"message": "User deleted successfully"
 }
+```
+
 
 
 
