@@ -13,8 +13,18 @@
   "lastName": "Salimi"
 }
 ```
-- **Response:** `201 Created` - Profil bilgileri
-  ```
+- **Response:** `201 Created`
+```
+  {
+    "id": "69c3b199a93bf034cf636957",
+    "ad": "Aisha",
+    "soyad": "Salimi",
+    "email": "Mar@test.edu",
+    "bolum": "",
+    "ilgi_alanlari": [],
+    "yetenekler": []
+}
+```
   
 ## 2. Giriş Yapma
 - **Endpoint:** `POST /auth/login`
@@ -25,15 +35,41 @@
   "password": "S123!"
 }
   ```
-- **Response:** `200 ok` - Token, profil bilgileri
-  ```
+- **Response:** `200 ok`
+```
+   {
+    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY5Yjk1ZjEyYjRmZjQzNTRlN
+TkxYzc0NCIsImlhdCI6MTc3NDQzMDkwNiwiZXhwIjoxNzc0NDM0NTA2fQ.UYR8L337wV5WZypiN8BxUHgQUBzaV8PeTfMne24RZ_A",
+    "expiresIn": 3600,
+    "user": {
+        "id": "69b95f12b4ff4354e591c744",
+        "ad": "Aisha",
+        "soyad": "Salimi",
+        "email": "Mar@test.edu",
+        "bolum": "",
+        "ilgi_alanlari": [],
+        "yetenekler": []
+    }
+}
+```
   
 ## 3. Profil Görüntüleme
 - **Endpoint:** `GET /users/{userId}`
 - **Path Parameters:** 
   - `userId` (string, required) - Kullanıcı ID'si
 - **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK` - Profil bilgileri
+- **Response:** `200 OK`
+```
+{
+    "id": "69b95f12b4ff4354e591c744",
+    "ad": "Aisha",
+    "soyad": "Salimi",
+    "email": "Mar@test.edu",
+    "bolum": "",
+    "ilgi_alanlari": [],
+    "yetenekler": []
+}
+```
 
 
 ## 4. Profil Güncelleme
@@ -49,8 +85,27 @@
     "skills": ["swimming", "leadership"]
 }
   ```
-- **Response:** `200 OK` - Güncel profil bilgileri
-  ```
+- **Response:** `200 OK` 
+```
+{
+    "_id": "69b95f12b4ff4354e591c744",
+    "firstName": "Aisha",
+    "lastName": "Salimi",
+    "email": "Mar@test.edu",
+    "interests": [
+        "reading",
+        "writing"
+    ],
+    "skills": [
+        "swimming",
+        "leadership"
+    ],
+    "createdAt": "2026-03-17T14:02:58.250Z",
+    "updatedAt": "2026-03-25T09:32:50.450Z",
+    "__v": 0
+}
+
+```
 
 ## 5. Çıkış Yapma
 - **Endpoint:** `POST /auth/logout`
