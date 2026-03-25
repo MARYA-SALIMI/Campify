@@ -14,10 +14,11 @@ exports.createTeam = async ({ baslik, aciklama, kontenjan, arananYetkinlikler, u
 
 // Ekipleri listele
 exports.listTeams = async (page, limit) => {
-  return await Team.find()
-    .skip((page - 1) * limit)
-    .limit(limit)
-    .sort({ olusturulmaTarihi: -1 });
+  const [teams, total] = await Promise.all([
+    Team.find().skip((page - 1) * limit).limit(limit).sort({ olusturulmaTarihi: -1 }),
+    Team.countDocuments()
+  ]);
+  return { teams, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
 
 // Tek ekip getir

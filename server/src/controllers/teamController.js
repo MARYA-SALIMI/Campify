@@ -35,35 +35,24 @@ exports.listTeams = async (req, res) => {
 };
 
 // ─── GET /teams/:teamId ───────────────────────────────────────────────────────
-exports.getTeam = async (req, res) => {
-  try {
-    const team = await teamService.getTeamById(req.params.teamId);
-    if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
-    res.json(team);
-  } catch (err) {
-    errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
-  }
+const mongoose = require("mongoose");
+exports.getTeamById = async (teamId) => {
+  if (!mongoose.Types.ObjectId.isValid(teamId)) return null;
+  return await Team.findById(teamId);
 };
 
 // ─── PUT /teams/:teamId ───────────────────────────────────────────────────────
-exports.updateTeam = async (req, res) => {
-  try {
-    const team = await teamService.getTeamById(req.params.teamId);
-    if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
-
-    if (team.olusturanId.toString() !== req.user.id) {
-      return errRes(res, 403, "FORBIDDEN", "Yalnızca ilan sahibi güncelleyebilir");
-    }
-
-    const updated = await teamService.updateTeam(team, req.body);
-    res.json(updated);
-  } catch (err) {
-    if (err.code) return errRes(res, 400, err.code, err.message);
-    if (err.name === "ValidationError") {
-      return errRes(res, 400, "VALIDATION_ERROR", err.message);
-    }
-    errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
+exports.updateTeam = async (team, { baslik, aciklama, kontenjan, arananYetkinlikler }) => {
+  if (kontenjan !== undefined && kontenjan < team.uyeler.length) {
+    throw { code: "INVALID_KONTENJAN", message: "Kontenjan mevcut üye sayısından az olamaz" };
   }
+
+  const updates = { baslik, aciklama, kontenjan, arananYetkinlikler };
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value !== undefined) team[key] = value;
+  });
+
+  return await team.save();
 };
 
 // ─── DELETE /teams/:teamId ────────────────────────────────────────────────────
