@@ -1,6 +1,6 @@
 # Marya Salimi'nin REST API Metotları
 
-**API Test Videosu:** [Link buraya eklenecek](https://youtu.be/1lLLhhzn3CU)
+**API Test Videosu:** [](https://youtu.be/1lLLhhzn3CU)
 
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
