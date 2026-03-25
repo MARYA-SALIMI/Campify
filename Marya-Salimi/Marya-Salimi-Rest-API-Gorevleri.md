@@ -13,8 +13,7 @@
   "firstName": "Aisha",
   "lastName": "Salimi"
 }
-
-  ```
+```
 - **Response:** `201 Created` 
 
 
