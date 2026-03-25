@@ -5,7 +5,7 @@
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
 - **Request Body:**  
-  ```json  
+```json  
 {
   "email": "Mar@test.edu",
   "password": "S123!",
