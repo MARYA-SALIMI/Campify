@@ -1,0 +1,191 @@
+{
+  "info": {
+    "_postman_id": "58c1aa13-525c-4bd8-9f2a-06ef5846106d",
+    "name": "Sinem-Havan-Campify",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "50706690",
+    "_collection_link": "https://go.postman.co/collection/50706690-58c1aa13-525c-4bd8-9f2a-06ef5846106d?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "1. Gönderi Oluşturma",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Campify ekibi için geliştirici arıyoruz!\",\r\n  \"content\": \"Projemizde yer alacak, takım çalışmasına yatkın arkadaşları bekliyoruz. İlgilenenler bana ulaşabilir.\",\r\n  \"tags\": [\"Proje\", \"Yazılım\", \"Ekip\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/posts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "posts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "2. Gönderi Listeleme",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/posts",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "posts"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "3. Gönderi Güncelleme",
+      "request": {
+        "method": "PUT",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"title\": \"Campify ekibi için ACİL frontend geliştirici aranıyor!\",\r\n  \"content\": \"Projemizde yer alacak, takım çalışmasına yatkın arkadaşları acilen bekliyoruz. İlan güncellenmiştir.\",\r\n  \"tags\": [\"Proje\", \"Yazılım\", \"Ekip\", \"Acil\"]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/posts/69c387d9889f8223a2f90415",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "posts",
+            "69c387d9889f8223a2f90415"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "4. Gönderi Silme",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/posts/69c387d9889f8223a2f90415",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "posts",
+            "69c387d9889f8223a2f90415"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "5. Sohbet Oluşturma",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"receiverId\": \"60d0fe4f5311236168a109cb\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/chats",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "chats"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "6. Mesaj Gönderme",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"content\": \"Merhaba, projeniz ilgimi çekti. Acaba frontend ekibine katılabilir miyim?\"\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:3000/api/chats/69c3912c3ed8a374c5a42e77/messages",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "chats",
+            "69c3912c3ed8a374c5a42e77",
+            "messages"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "7. Sohbet Listeleme",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:3000/api/chats",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "3000",
+          "path": [
+            "api",
+            "chats"
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
