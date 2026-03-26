@@ -1,6 +1,7 @@
 # Emine Türkoğlu'nun REST API Metotları
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)
+**API Test Videosu:** [Link buraya eklenecek](https://example.com)  
+**Domain Adresi:** [https://campify-api-2nzn.onrender.com/](https://campify-api-2nzn.onrender.com/)
 
 ## 1. Ekip İlanı Oluşturma
 - **Endpoint:** `POST /teams`
