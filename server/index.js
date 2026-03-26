@@ -5,7 +5,7 @@ const app = express();
 app.use(express.json());
 
 // Veritabanı Bağlantısı
-mongoose.connect('mongodb://127.0.0.1:27017/campify')
+mongoose.connect('mongodb+srv://melisa:365214789@cluster0.gi14amm.mongodb.net/?appName=Cluster0')
     .then(() => console.log('MongoDB veritabanına başarıyla bağlanıldı! 🚀'))
     .catch((err) => console.log('MongoDB bağlantı hatası:', err));
 
