@@ -1,50 +1,25 @@
 const Chat = require('../models/Chat');
 const Message = require('../models/Message');
 
-// 1. Sohbet Oluşturma (POST /chats)
+// 1. Sohbet Oluşturma
 exports.createChat = async (req, res) => {
     try {
         const { receiverId, initialMessage } = req.body;
-        // Auth eklendiğinde giriş yapan kullanıcıyı alacağız: const senderId = req.user.id;
-        
-        // Şimdilik test için sahte bir gönderici ID'si oluşturuyoruz
-        const mongoose = require('mongoose');
-        const senderId = new mongoose.Types.ObjectId(); 
-
-        // Sohbet kanalını oluştur
-        const newChat = new Chat({
-            participants: [senderId, receiverId]
-        });
+        const newChat = new Chat({ participants: [receiverId] });
         await newChat.save();
-
-        // İlk mesajı oluştur ve kaydet
-        if (initialMessage) {
-            const newMessage = new Message({
-                chatId: newChat._id,
-                senderId: senderId,
-                content: initialMessage
-            });
-            await newMessage.save();
-        }
-
-        res.status(201).json({ message: "Sohbet kanalı oluşturuldu." });
+        res.status(201).json(newChat);
     } catch (error) {
-        res.status(400).json({ code: "BAD_REQUEST", message: "Geçersiz istek" });
+        res.status(400).json({ message: error.message });
     }
 };
 
-// 2. Mesaj Silme (DELETE /messages/{messageId})
+// 2. Mesaj Silme
 exports.deleteMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
-        const deletedMessage = await Message.findByIdAndDelete(messageId);
-
-        if (!deletedMessage) {
-            return res.status(404).json({ code: "NOT_FOUND", message: "Mesaj bulunamadı" });
-        }
-
-        res.status(204).send(); // Başarılı silme
+        await Message.findByIdAndDelete(messageId);
+        res.status(204).send();
     } catch (error) {
-        res.status(500).json({ code: "SERVER_ERROR", message: "Silme işlemi başarısız" });
+        res.status(400).json({ message: error.message });
     }
 };
