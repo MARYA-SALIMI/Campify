@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const express = require('express');
 const mongoose = require('mongoose');
 
@@ -5,7 +7,7 @@ const app = express();
 app.use(express.json());
 
 // Veritabanı Bağlantısı
-mongoose.connect('mongodb+srv://melisa:365214789@cluster0.gi14amm.mongodb.net/?appName=Cluster0')
+mongoose.connect(process.env.MONGODB_URI)
     .then(() => console.log('MongoDB veritabanına başarıyla bağlanıldı! 🚀'))
     .catch((err) => console.log('MongoDB bağlantı hatası:', err));
 
