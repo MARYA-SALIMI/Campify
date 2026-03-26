@@ -1,6 +1,6 @@
 # Sinem Havan'ın REST API Metotları
 
-**Canlı API Linki (Base URL):** `https://campify-api-l1vf.onrender.com`
+**API test videosu:** ` `
 
 ---
 
