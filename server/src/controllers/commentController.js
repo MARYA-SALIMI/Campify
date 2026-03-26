@@ -1,12 +1,20 @@
 const Comment = require('../models/Comment');
 
+
+
 // 1. Ekleme
 exports.addComment = async (req, res) => {
     try {
-        const newComment = new Comment({ postId: req.params.postId, text: req.body.text });
+        const newComment = new Comment({ 
+            postId: req.params.postId, 
+            text: req.body.text,
+            authorId: req.body.authorId // İŞTE GÖZDEN KAÇAN O SİHİRLİ SATIR! 🚀
+        });
         await newComment.save();
         res.status(201).json(newComment);
-    } catch (err) { res.status(400).json(err); }
+    } catch (err) { 
+        res.status(400).json(err); 
+    }
 };
 
 // 2. Listeleme

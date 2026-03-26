@@ -1,24 +1,33 @@
-const Chat = require('../models/Chat');
-const Message = require('../models/Message');
 
-// 1. Sohbet Oluşturma
-exports.createChat = async (req, res) => {
+const Chat = require('../models/Chat'); // Model isminin doğru olduğundan emin ol
+
+// Mesaj Oluştur
+exports.createMessage = async (req, res) => {
     try {
-        const { receiverId, initialMessage } = req.body;
-        const newChat = new Chat({ participants: [receiverId] });
-        await newChat.save();
-        res.status(201).json(newChat);
+        const newMessage = new Chat(req.body);
+        const savedMessage = await newMessage.save();
+        res.status(201).json(savedMessage);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
-// 2. Mesaj Silme
+// Mesajları Getir
+exports.getMessages = async (req, res) => {
+    try {
+        const messages = await Chat.find().sort({ createdAt: 1 });
+        res.status(200).json(messages);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// Mesaj Sil
 exports.deleteMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
-        await Message.findByIdAndDelete(messageId);
-        res.status(204).send();
+        await Chat.findByIdAndDelete(messageId);
+        res.status(200).json({ message: "Mesaj başarıyla silindi." });
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
