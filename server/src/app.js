@@ -4,16 +4,16 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
+// Gelen tüm istekleri terminale yazdıran radar
+app.use((req, res, next) => {
+    console.log(`🚀 [RADAR] İstek Geldi: ${req.method} ${req.url}`);
+    next();
+});
 // Routes
-app.use('/v1/auth', require('./routes/authRoutes'));
-app.use('/v1/users', require('./routes/userRoutes'));
-app.use('/v1/api/posts', require('./routes/postRoutes'));
-app.use('/v1/api/chats', require('./routes/chatRoutes'));
 app.use('/v1/teams', require('./routes/teamRoutes'));  //benim kısmım
-app.use('/v1/posts', require('./routes/commentRoutes'));
+
 
 // Global hata handler
-app.use(require('./middlewares/errorHandler'));
+app.use(require('./middleware/errorMiddleware'));
 
 module.exports = app;

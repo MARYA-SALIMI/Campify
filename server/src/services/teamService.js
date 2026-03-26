@@ -28,10 +28,13 @@ exports.getTeamById = async (teamId) => {
 
 // Ekip güncelle
 exports.updateTeam = async (team, { baslik, aciklama, kontenjan, arananYetkinlikler }) => {
-  if (kontenjan && kontenjan < team.uyeler.length) {
+  if (kontenjan !== undefined && kontenjan < team.uyeler.length) {
     throw { code: "INVALID_KONTENJAN", message: "Kontenjan mevcut üye sayısından az olamaz" };
   }
-  Object.assign(team, { baslik, aciklama, kontenjan, arananYetkinlikler });
+  const updates = { baslik, aciklama, kontenjan, arananYetkinlikler };
+  Object.entries(updates).forEach(([key, value]) => {
+    if (value !== undefined) team[key] = value;
+  });
   return await team.save();
 };
 

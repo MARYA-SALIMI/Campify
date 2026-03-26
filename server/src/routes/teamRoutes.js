@@ -1,5 +1,5 @@
 const router = require("express").Router();
-const auth = require("../middlewares/auth");
+const auth = require("../middleware/authMiddleware");
 const ctrl = require("../controllers/teamController");
 
 // POST   /v1/teams          → Ekip ilanı oluştur

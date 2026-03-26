@@ -1,11 +1,13 @@
-const Team = require("../models/Team");
+// controllers/teamController.js
 const teamService = require("../services/teamService");
 
-// ─── Yardımcı: hata yanıtı ───────────────────────────────────────────────────
-const errRes = (res, status, code, message) =>
-  res.status(status).json({ code, message });
-
-// ─── POST /teams ─────────────────────────────────────────────────────────────
+const errRes = (res, status, code, message, errorDetail = null) => {
+  if (errorDetail) {
+    console.error(`🔥 [${code}] HATA DETAYI:`, errorDetail); // Terminalde göreceğiz
+  }
+  return res.status(status).json({ code, message, error: errorDetail?.message }); 
+};
+// POST /teams
 exports.createTeam = async (req, res) => {
   try {
     const { baslik, aciklama, kontenjan, arananYetkinlikler } = req.body;
@@ -15,55 +17,60 @@ exports.createTeam = async (req, res) => {
     });
     res.status(201).json(team);
   } catch (err) {
-    if (err.name === "ValidationError") {
+    if (err.name === "ValidationError")
       return errRes(res, 400, "VALIDATION_ERROR", err.message);
-    }
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
   }
 };
 
-// ─── GET /teams ───────────────────────────────────────────────────────────────
+// GET /teams
 exports.listTeams = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
-    const teams = await teamService.listTeams(page, limit);
-    res.json(teams);
+    const result = await teamService.listTeams(page, limit);
+    res.json(result);
   } catch (err) {
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
   }
 };
 
-// ─── GET /teams/:teamId ───────────────────────────────────────────────────────
-const mongoose = require("mongoose");
-exports.getTeamById = async (teamId) => {
-  if (!mongoose.Types.ObjectId.isValid(teamId)) return null;
-  return await Team.findById(teamId);
-};
-
-// ─── PUT /teams/:teamId ───────────────────────────────────────────────────────
-exports.updateTeam = async (team, { baslik, aciklama, kontenjan, arananYetkinlikler }) => {
-  if (kontenjan !== undefined && kontenjan < team.uyeler.length) {
-    throw { code: "INVALID_KONTENJAN", message: "Kontenjan mevcut üye sayısından az olamaz" };
+// GET /teams/:teamId  ← router'da ctrl.getTeam olarak çağrılıyor, bu eksikti!
+exports.getTeam = async (req, res) => {
+  try {
+    const team = await teamService.getTeamById(req.params.teamId);
+    if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
+    res.json(team);
+  } catch (err) {
+    errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
   }
-
-  const updates = { baslik, aciklama, kontenjan, arananYetkinlikler };
-  Object.entries(updates).forEach(([key, value]) => {
-    if (value !== undefined) team[key] = value;
-  });
-
-  return await team.save();
 };
 
-// ─── DELETE /teams/:teamId ────────────────────────────────────────────────────
+// PUT /teams/:teamId
+exports.updateTeam = async (req, res) => {
+  try {
+    const team = await teamService.getTeamById(req.params.teamId);
+    if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
+
+    if (team.olusturanId.toString() !== req.user.id)
+      return errRes(res, 403, "FORBIDDEN", "Yalnızca ilan sahibi güncelleyebilir");
+
+    const updated = await teamService.updateTeam(team, req.body);
+    res.json(updated);
+  } catch (err) {
+    if (err.code) return errRes(res, 400, err.code, err.message);
+    errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
+  }
+};
+
+// DELETE /teams/:teamId
 exports.deleteTeam = async (req, res) => {
   try {
     const team = await teamService.getTeamById(req.params.teamId);
     if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
 
-    if (team.olusturanId.toString() !== req.user.id) {
+    if (team.olusturanId.toString() !== req.user.id)
       return errRes(res, 403, "FORBIDDEN", "Yalnızca ilan sahibi silebilir");
-    }
 
     await teamService.deleteTeam(team);
     res.status(204).send();
@@ -72,7 +79,7 @@ exports.deleteTeam = async (req, res) => {
   }
 };
 
-// ─── POST /teams/:teamId/join ─────────────────────────────────────────────────
+// POST /teams/:teamId/join
 exports.joinTeam = async (req, res) => {
   try {
     const team = await teamService.getTeamById(req.params.teamId);
@@ -90,7 +97,7 @@ exports.joinTeam = async (req, res) => {
   }
 };
 
-// ─── DELETE /teams/:teamId/leave ──────────────────────────────────────────────
+// DELETE /teams/:teamId/leave
 exports.leaveTeam = async (req, res) => {
   try {
     const team = await teamService.getTeamById(req.params.teamId);
