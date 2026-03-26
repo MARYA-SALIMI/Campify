@@ -1,6 +1,6 @@
 # Sinem Havan'ın REST API Metotları
 
-**API test videosu:** ` `
+**API Test Videosu:** ` `
 
 ---
 
