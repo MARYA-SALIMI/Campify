@@ -2,6 +2,8 @@
 
 **API Test Videosu:** ` `
 
+**Canlı API Linki (Base URL):** `https://campify-api-l1vf.onrender.com`
+
 ---
 
 ## 1. Gönderi Oluşturma
