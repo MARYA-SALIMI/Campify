@@ -28,7 +28,8 @@ exports.listTeams = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
-    const result = await teamService.listTeams(page, limit);
+    const filter = req.query.filter || "all";
+    const result = await teamService.listTeams(page, limit, req.user.id, filter);
     res.json(result);
   } catch (err) {
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
@@ -40,6 +41,9 @@ exports.getTeam = async (req, res) => {
   try {
     const team = await teamService.getTeamById(req.params.teamId);
     if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
+
+    await team.populate("olusturanId", "ad soyad");
+
     res.json(team);
   } catch (err) {
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");

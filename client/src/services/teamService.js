@@ -1,4 +1,4 @@
-const BASE_URL = "http://campify-api.onrender.com/v1";
+const BASE_URL = "https://campify-api-2nzn.onrender.com/v1";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -16,10 +16,15 @@ const mapTeam = (t) => ({
 });
 
 // Ekipleri listele
-export const listTeams = async (page = 1, limit = 10) => {
-  const res = await fetch(`${BASE_URL}/teams?page=${page}&limit=${limit}`, {
+export const listTeams = async ({page = 1, limit = 10, filterType = "all"} = {}) => {
+let url = `${BASE_URL}/teams?page=${page}&limit=${limit}`;
+
+if(filterType !== "all") url += `&filter=${filterType}`;
+
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${getToken()}` },
   });
+  
   const data = await res.json();
   return {
     ...data,
@@ -52,6 +57,12 @@ export const createTeam = async ({ name, description, capacity, skills }) => {
     }),
   });
   const data = await res.json();
+
+  if (!res.ok) {
+    alert("Backend bir hata fırlattı: " + JSON.stringify(data));
+    throw new Error("İlan oluşturulamadı");
+  }
+
   return mapTeam(data);
 };
 

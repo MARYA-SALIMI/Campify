@@ -26,7 +26,7 @@ const TeamPage = () => {
     const fetchTeams = async () => {
       setLoading(true);
       try {
-        const data = await listTeams();
+        const data = await listTeams({ filterType: filter });
         setTeams(Array.isArray(data) ? data : data.teams);
       } catch (err) {
         console.error("İlanlar yüklenemedi:", err);
@@ -35,14 +35,9 @@ const TeamPage = () => {
       }
     };
     fetchTeams();
-  }, []);
+  }, [filter]);
 
-  const filteredTeams = teams.filter((team) => {
-    if (filter === "open") return team.members.length < team.capacity;
-    if (filter === "mine") return team.ownerId === currentUserId;
-    if (filter === "joined") return team.members.includes(currentUserId) && team.ownerId !== currentUserId;
-    return true;
-  });
+
 
   const handleJoin = async (teamId) => {
     // teamService.joinTeam(teamId) buraya gelecek
@@ -140,7 +135,7 @@ const TeamPage = () => {
           </div>
         ) : (
           <TeamList
-            teams={filteredTeams}
+            teams={teams}
             currentUserId={currentUserId}
             onSelectTeam={setSelectedTeam}
           />

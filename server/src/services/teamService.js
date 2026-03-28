@@ -13,10 +13,19 @@ exports.createTeam = async ({ baslik, aciklama, kontenjan, arananYetkinlikler, u
 };
 
 // Ekipleri listele
-exports.listTeams = async (page, limit) => {
+exports.listTeams = async (page, limit, userId, filter= "all") => {
+  let query = {};
+
+  if (filter === "open") {
+    query = { $expr: { $lt: [{ $size: "$uyeler" }, "$kontenjan"] } }; // sadece açık ilanlar
+  } else if (filter === "joined") {
+    query = { uyeler: userId }; // katıldıklarım
+  } else if (filter === "mine") {
+    query = { olusturanId: userId }; // benim ilanlarım
+  }
   const [teams, total] = await Promise.all([
-    Team.find().skip((page - 1) * limit).limit(limit).sort({ olusturulmaTarihi: -1 }),
-    Team.countDocuments()
+    Team.find(query).skip((page - 1) * limit).limit(limit).sort({ olusturulmaTarihi: -1 }),
+    Team.countDocuments(query)
   ]);
   return { teams, total, page, limit, totalPages: Math.ceil(total / limit) };
 };
@@ -45,7 +54,7 @@ exports.deleteTeam = async (team) => {
 
 // Ekibe katıl
 exports.joinTeam = async (team, userId) => {
-  if (team.uyeler.some((u) => u.toString() === userId)) {
+  if (team.uyeler.some((u) => u.toString() === userId.toString())) {
     throw { code: "ALREADY_MEMBER", message: "Zaten bu ekibin üyesisin" };
   }
   if (team.uyeler.length >= team.kontenjan) {
@@ -57,10 +66,11 @@ exports.joinTeam = async (team, userId) => {
 
 // Ekipten ayrıl
 exports.leaveTeam = async (team, userId) => {
-  if (team.olusturanId.toString() === userId) {
+  if (team.olusturanId.toString() === userId.toString()
+  ) {
     throw { code: "OWNER_CANNOT_LEAVE", message: "İlan sahibi ekipten ayrılamaz" };
   }
-  const index = team.uyeler.findIndex((u) => u.toString() === userId);
+  const index = team.uyeler.findIndex((u) => u.toString() === userId.toString());
   if (index === -1) {
     throw { code: "NOT_MEMBER", message: "Bu ekibin üyesi değilsin" };
   }

@@ -46,10 +46,10 @@ const TeamCreate = ({ onClose, onSuccess }) => {
     setLoading(true);
     try {
       await createTeam({
-      baslik: formData.name,
-      aciklama: formData.description,
-      kontenjan: Number(formData.capacity),
-      arananYetkinlikler: formData.skills,
+      name: formData.name,
+      description: formData.description,
+      capacity: Number(formData.capacity),
+      skills: formData.skills,
     });
       onSuccess?.();
       onClose?.();
