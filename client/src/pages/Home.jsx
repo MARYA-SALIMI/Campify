@@ -1,5 +1,7 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useEffect } from "react";
 import "./Home.css";
+import PostList from "../components/posts/PostList";
+import PostCreate from "../components/posts/PostCreate";
 
 const CATEGORIES = [
   { id: "all", label: "Tümü", icon: "◈" },
@@ -107,7 +109,7 @@ export default function Home() {
   return (
     <div className="home-root">
       
-      {/* YENİ EKLENEN ÜST BAŞLIK VE BUTON ALANI */}
+      {/* ÜST BAŞLIK VE BUTON ALANI */}
       <div className="page-header">
         <div className="page-header-text">
           <h1>Kampüs Akışı</h1>
@@ -136,95 +138,25 @@ export default function Home() {
         ))}
       </div>
 
-      <main className="post-list">
-        {filtered.length === 0 && (
-          <div className="empty-state">Bu kategoride henüz gönderi yok.</div>
-        )}
-        {filtered.map((post, i) => (
-          <article
-            key={post.id}
-            className={`post-card ${newCardId === post.id ? "post-card--new" : ""}`}
-            style={{ "--i": i, "--accent": CAT_COLORS[post.category] || "#aaa" }}
-          >
-            <div className="card-accent-bar" />
-            <div className="card-inner">
-              <div className="card-meta-row">
-                <span className="post-badge">
-                  {CATEGORIES.find((c) => c.id === post.category)?.icon}{" "}
-                  {CATEGORIES.find((c) => c.id === post.category)?.label}
-                </span>
-                <span className="post-time">{post.time}</span>
-              </div>
-              <h3 className="post-title">{post.title}</h3>
-              <p className="post-body">{post.content}</p>
-              <div className="post-author-row">
-                <div className="author-avatar">{post.avatar}</div>
-                <span className="author-name">@{post.author}</span>
-              </div>
-            </div>
-          </article>
-        ))}
-      </main>
+      {/* GÖNDERİ LİSTESİ BİLEŞENİ */}
+      <PostList 
+        filtered={filtered} 
+        newCardId={newCardId} 
+        CATEGORIES={CATEGORIES} 
+        CAT_COLORS={CAT_COLORS} 
+      />
 
-      {showModal && (
-        <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="modal">
-            <div className="modal-header">
-              <h2>Yeni Gönderi</h2>
-              <button className="modal-close" onClick={() => setShowModal(false)}>✕</button>
-            </div>
+      {/* YENİ GÖNDERİ MODAL BİLEŞENİ */}
+      <PostCreate 
+        showModal={showModal} 
+        setShowModal={setShowModal} 
+        newPost={newPost} 
+        setNewPost={setNewPost} 
+        handleCreate={handleCreate} 
+        CATEGORIES={CATEGORIES} 
+        CAT_COLORS={CAT_COLORS} 
+      />
 
-            <div className="modal-field">
-              <label>Kategori</label>
-              <div className="cat-grid">
-                {CATEGORIES.filter((c) => c.id !== "all").map((cat) => (
-                  <button
-                    key={cat.id}
-                    className={`cat-option ${newPost.category === cat.id ? "selected" : ""}`}
-                    style={{ "--cat": CAT_COLORS[cat.id] }}
-                    onClick={() => setNewPost({ ...newPost, category: cat.id })}
-                  >
-                    <span>{cat.icon}</span>
-                    {cat.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="modal-field">
-              <label>Başlık</label>
-              <input
-                type="text"
-                placeholder="Gönderi başlığı..."
-                value={newPost.title}
-                onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
-              />
-            </div>
-
-            <div className="modal-field">
-              <label>İçerik</label>
-              <textarea
-                placeholder="Ne paylaşmak istiyorsun?"
-                rows={4}
-                value={newPost.content}
-                onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-              />
-            </div>
-
-            {/* Modal Actions (İptal ve Yayınla Butonları) */}
-            <div className="modal-actions">
-              <button className="btn-cancel" onClick={() => setShowModal(false)}>İptal</button>
-              <button
-                className="btn-publish"
-                style={{ "--pub": CAT_COLORS[newPost.category] }}
-                onClick={handleCreate}
-              >
-                Yayınla
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
