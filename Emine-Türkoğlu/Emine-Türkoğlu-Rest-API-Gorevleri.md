@@ -1,6 +1,6 @@
 # Emine Türkoğlu'nun REST API Metotları
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)  
+**API Test Videosu:** [Tıklayınız](https://www.youtube.com/watch?v=WluZVcN1m7g)  
 **Domain Adresi:** [https://campify-api-2nzn.onrender.com/](https://campify-api-2nzn.onrender.com/)
 
 ## 1. Ekip İlanı Oluşturma
