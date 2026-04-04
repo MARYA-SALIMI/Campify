@@ -1,4 +1,4 @@
-import { useState } from "react";
+/*import { useState } from "react";
 import "./teamDetail.css";
 
 const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onDelete }) => {
@@ -199,4 +199,4 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
   );
 };
 
-export default TeamDetail;
+export default TeamDetail;*/

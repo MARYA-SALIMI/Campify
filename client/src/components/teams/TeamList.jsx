@@ -1,4 +1,4 @@
-import "./teamList.css";
+/*import "./teamList.css";
 
 const TeamList = ({ teams = [], currentUserId, onSelectTeam }) => {
   if (teams.length === 0) {
@@ -94,4 +94,4 @@ const TeamList = ({ teams = [], currentUserId, onSelectTeam }) => {
   );
 };
 
-export default TeamList;
+export default TeamList;*/

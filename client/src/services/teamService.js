@@ -1,4 +1,4 @@
-const BASE_URL = "https://campify-api-2nzn.onrender.com/v1";
+/*const BASE_URL = "https://campify-api-2nzn.onrender.com/v1";
 
 const getToken = () => localStorage.getItem("token");
 
@@ -112,4 +112,4 @@ export const leaveTeam = async (teamId) => {
     headers: { Authorization: `Bearer ${getToken()}` },
   });
   return res.json();
-};
+};*/

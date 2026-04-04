@@ -8,4 +8,6 @@ router.get('/', postController.getPosts);                // Tüm gönderileri li
 router.put('/:postId', postController.updatePost);       // Belirli bir gönderiyi güncelle
 router.delete('/:postId', postController.deletePost);    // Belirli bir gönderiyi sil
 
+
+
 module.exports = router;

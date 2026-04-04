@@ -1,7 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import "./Home.css";
 import PostList from "../components/posts/PostList";
 import PostCreate from "../components/posts/PostCreate";
+import { fetchPosts } from "../services/postService";
 
 const CATEGORIES = [
   { id: "all", label: "Tümü", icon: "◈" },
@@ -9,63 +10,6 @@ const CATEGORIES = [
   { id: "team", label: "Ekip Arama", icon: "👥" },
   { id: "announcement", label: "Duyuru", icon: "📢" },
   { id: "lost", label: "Kayıp Eşya", icon: "🔍" },
-];
-
-const MOCK_POSTS = [
-  {
-    id: 1,
-    category: "book",
-    title: "Suç ve Ceza — Dostoyevski",
-    content: "2. el, iyi durumda. 40 TL'ye satıyorum. DM atabilirsiniz.",
-    author: "ayse.k",
-    avatar: "A",
-    time: "2 saat önce",
-  },
-  {
-    id: 2,
-    category: "team",
-    title: "Hackathon ekibi arıyorum",
-    content: "Nisan sonundaki TechFest için takım kuruyorum. Backend veya UI/UX bilen arkadaşlar yazabilir.",
-    author: "mert.dev",
-    avatar: "M",
-    time: "5 saat önce",
-  },
-  {
-    id: 3,
-    category: "announcement",
-    title: "Kütüphane Saatleri Değişti",
-    content: "Bu hafta Cuma günü kütüphane 17:00'de kapanacaktır. Bilgilerinize.",
-    author: "admin",
-    avatar: "★",
-    time: "1 gün önce",
-  },
-  {
-    id: 4,
-    category: "lost",
-    title: "Siyah şemsiye kayboldu",
-    content: "Kafeterya yakınında siyah şemsiyemi kaybettim. Gören olursa lütfen ulaşsın.",
-    author: "zeynep.s",
-    avatar: "Z",
-    time: "3 saat önce",
-  },
-  {
-    id: 5,
-    category: "book",
-    title: "Dune — Frank Herbert (İngilizce)",
-    content: "Orijinal İngilizce baskı. Hiç okunmamış gibi. 80 TL.",
-    author: "can.b",
-    avatar: "C",
-    time: "12 saat önce",
-  },
-  {
-    id: 6,
-    category: "team",
-    title: "Proje grubu — Veri Madenciliği",
-    content: "Veri Madenciliği dersi için 3. ve 4. üye arıyoruz. Toplantı günü Çarşamba.",
-    author: "elif.y",
-    avatar: "E",
-    time: "6 saat önce",
-  },
 ];
 
 const CAT_COLORS = {
@@ -76,30 +20,50 @@ const CAT_COLORS = {
 };
 
 export default function Home() {
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState([]);
+  const [postsLoading, setPostsLoading] = useState(true);
+  const [postsError, setPostsError] = useState(null);
   const [activeFilter, setActiveFilter] = useState("all");
   const [showModal, setShowModal] = useState(false);
   const [newPost, setNewPost] = useState({ title: "", content: "", category: "book" });
   const [newCardId, setNewCardId] = useState(null);
 
+  const loadPosts = useCallback(async () => {
+    setPostsLoading(true);
+    setPostsError(null);
+    try {
+      const list = await fetchPosts();
+      setPosts(list);
+    } catch (err) {
+      let msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Gönderiler yüklenirken bir hata oluştu.";
+      if (err.code === "ERR_NETWORK" || /Network Error/i.test(String(err.message))) {
+        msg =
+          "Backend'e bağlanılamadı. `server` klasöründe API'yi çalıştırın (örn. port 3000) veya client için `.env` içinde VITE_POSTS_API_URL ile canlı API adresinizi verin (örn. https://sunucu.onrender.com/api).";
+      }
+      setPostsError(msg);
+      setPosts([]);
+    } finally {
+      setPostsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
+
   const filtered =
     activeFilter === "all" ? posts : posts.filter((p) => p.category === activeFilter);
 
-  const handleCreate = () => {
-    if (!newPost.title.trim() || !newPost.content.trim()) return;
-    const post = {
-      id: Date.now(),
-      ...newPost,
-      author: "sen",
-      avatar: "S",
-      time: "şimdi",
-    };
-    setPosts([post, ...posts]);
-    setNewCardId(post.id);
-    setShowModal(false);
-    setNewPost({ title: "", content: "", category: "book" });
-    setActiveFilter("all");
-    setTimeout(() => setNewCardId(null), 800);
+  const handlePostCreated = (created) => {
+    if (created) {
+      setPosts((prev) => [created, ...prev.filter((p) => p.id !== created.id)]);
+      setNewCardId(created.id);
+      setActiveFilter("all");
+      setTimeout(() => setNewCardId(null), 800);
+    }
   };
 
   useEffect(() => {
@@ -108,8 +72,6 @@ export default function Home() {
 
   return (
     <div className="home-root">
-      
-      {/* ÜST BAŞLIK VE BUTON ALANI */}
       <div className="page-header">
         <div className="page-header-text">
           <h1>Kampüs Akışı</h1>
@@ -138,25 +100,24 @@ export default function Home() {
         ))}
       </div>
 
-      {/* GÖNDERİ LİSTESİ BİLEŞENİ */}
-      <PostList 
-        filtered={filtered} 
-        newCardId={newCardId} 
-        CATEGORIES={CATEGORIES} 
-        CAT_COLORS={CAT_COLORS} 
+      <PostList
+        filtered={filtered}
+        newCardId={newCardId}
+        CATEGORIES={CATEGORIES}
+        CAT_COLORS={CAT_COLORS}
+        loading={postsLoading}
+        error={postsError}
       />
 
-      {/* YENİ GÖNDERİ MODAL BİLEŞENİ */}
-      <PostCreate 
-        showModal={showModal} 
-        setShowModal={setShowModal} 
-        newPost={newPost} 
-        setNewPost={setNewPost} 
-        handleCreate={handleCreate} 
-        CATEGORIES={CATEGORIES} 
-        CAT_COLORS={CAT_COLORS} 
+      <PostCreate
+        showModal={showModal}
+        setShowModal={setShowModal}
+        newPost={newPost}
+        setNewPost={setNewPost}
+        CATEGORIES={CATEGORIES}
+        CAT_COLORS={CAT_COLORS}
+        onPostCreated={handlePostCreated}
       />
-
     </div>
   );
 }

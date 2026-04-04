@@ -1,5 +1,7 @@
-import { useState } from 'react';
+
 import { useAuth } from '../context/AuthContext';
+import { postApi } from '../services/api';
+import { useState, useEffect } from 'react';
 import {
   User,
   Mail,
@@ -46,10 +48,11 @@ const MOCK_POSTS = [
 export default function Profile() {
   const { logout } = useAuth();
   const [profile, setProfile] = useState(MOCK_PROFILE);
-  const [posts, setPosts] = useState(MOCK_POSTS);
+  const [posts, setPosts] = useState([]);
   const [editing, setEditing] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDark, setIsDark] = useState(false);
+  const [loadingPosts, setLoadingPosts] = useState(true);
 
   // --- Post Delete State ---
   const [postToDelete, setPostToDelete] = useState(null); // post id
@@ -67,6 +70,35 @@ export default function Profile() {
 
   const [newInterest, setNewInterest] = useState('');
   const [newSkill, setNewSkill] = useState('');
+
+  useEffect(() => {
+    const fetchMyPosts = async () => {
+      try {
+        setLoadingPosts(true);
+        // Backend'den gönderileri çekiyoruz
+        const { data } = await postApi.get('/api/posts');
+        
+        // Gelen veriyi diziye çeviriyoruz (backend'in dönüş yapısına göre)
+        const allPosts = Array.isArray(data) ? data : data?.posts ?? data?.items ?? [];
+
+        // ÖNEMLİ: Frontend'in düzgün çalışması için MongoDB'den gelen _id'yi,
+        // senin frontend'de kullandığın "id" formatına çeviriyoruz.
+        const formattedPosts = allPosts.map(p => ({
+          id: p._id, // MongoDB'nin 24 karakterlik gerçek ID'si
+          title: p.title,
+          content: p.content
+        }));
+
+        setPosts(formattedPosts);
+      } catch (error) {
+        console.error("Gönderiler yüklenemedi:", error);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+
+    fetchMyPosts();
+  }, []); // Boş bağımlılık dizisi: Sadece sayfa ilk açıldığında çalışır
 
   const handleAddInterest = (e) => {
     if (e.key === 'Enter' && newInterest.trim()) {
@@ -111,9 +143,19 @@ export default function Profile() {
   // --- Post Delete Handlers ---
   const openDeletePostModal = (postId) => setPostToDelete(postId);
   const closeDeletePostModal = () => setPostToDelete(null);
-  const confirmDeletePost = () => {
-    setPosts((prev) => prev.filter((p) => p.id !== postToDelete));
-    setPostToDelete(null);
+  const confirmDeletePost = async () => {
+    try {
+      // 1. Backend'e silme isteği atıyoruz
+      // endpoint'in /api/posts/ID şeklinde olduğunu varsayıyoruz
+      await postApi.delete(`/api/posts/${postToDelete}`);
+
+      // 2. İşlem başarılı olursa state'i güncelleyip ekrandan kaldırıyoruz
+      setPosts((prev) => prev.filter((p) => p.id !== postToDelete));
+      setPostToDelete(null);
+    } catch (error) {
+      console.error("Gönderi silinirken hata oluştu:", error);
+      alert("Gönderi silinemedi! Yetkiniz olmayabilir veya sunucu hatası.");
+    }
   };
 
   // --- Post Edit Handlers ---
@@ -125,13 +167,25 @@ export default function Profile() {
     setPostToEdit(null);
     setEditContent('');
   };
-  const confirmEditPost = () => {
-    setPosts((prev) =>
-      prev.map((p) =>
-        p.id === postToEdit.id ? { ...p, content: editContent } : p
-      )
-    );
-    closeEditPostModal();
+  const confirmEditPost = async () => {
+    try {
+      // 1. Backend'e güncelleme isteği atıyoruz
+      await postApi.put(`/api/posts/${postToEdit.id}`, {
+        content: editContent 
+        // Eğer başlığı da güncelliyorsan buraya title: editTitle vs. de ekleyebilirsin
+      });
+
+      // 2. İşlem başarılı olursa ekrandaki listeyi güncelliyoruz
+      setPosts((prev) =>
+        prev.map((p) =>
+          p.id === postToEdit.id ? { ...p, content: editContent } : p
+        )
+      );
+      closeEditPostModal();
+    } catch (error) {
+      console.error("Gönderi güncellenirken hata oluştu:", error);
+      alert("Gönderi güncellenemedi!");
+    }
   };
 
   const handleSimulatedDeleteAccount = () => setShowDeleteModal(false);

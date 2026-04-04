@@ -1,14 +1,47 @@
-import React from "react";
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { createPost } from "../../services/postService";
+
+const emptyPost = { title: "", content: "", category: "book" };
 
 export default function PostCreate({
   showModal,
   setShowModal,
   newPost,
   setNewPost,
-  handleCreate,
   CATEGORIES,
-  CAT_COLORS
+  CAT_COLORS,
+  onPostCreated,
 }) {
+  const navigate = useNavigate();
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
+
+  const handlePublish = async () => {
+    if (!newPost.title.trim() || !newPost.content.trim()) return;
+    setSubmitError(null);
+    setSubmitting(true);
+    try {
+      const created = await createPost({
+        title: newPost.title.trim(),
+        content: newPost.content.trim(),
+        category: newPost.category,
+      });
+      setNewPost({ ...emptyPost });
+      setShowModal(false);
+      onPostCreated?.(created);
+      navigate("/");
+    } catch (err) {
+      const msg =
+        err.response?.data?.message ||
+        err.message ||
+        "Gönderi oluşturulamadı.";
+      setSubmitError(msg);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (!showModal) return null;
 
   return (
@@ -25,6 +58,7 @@ export default function PostCreate({
             {CATEGORIES.filter((c) => c.id !== "all").map((cat) => (
               <button
                 key={cat.id}
+                type="button"
                 className={`cat-option ${newPost.category === cat.id ? "selected" : ""}`}
                 style={{ "--cat": CAT_COLORS[cat.id] }}
                 onClick={() => setNewPost({ ...newPost, category: cat.id })}
@@ -56,14 +90,24 @@ export default function PostCreate({
           />
         </div>
 
+        {submitError && (
+          <p className="empty-state" style={{ color: "#c44", margin: "0 0 0.5rem" }}>
+            {submitError}
+          </p>
+        )}
+
         <div className="modal-actions">
-          <button className="btn-cancel" onClick={() => setShowModal(false)}>İptal</button>
+          <button type="button" className="btn-cancel" onClick={() => setShowModal(false)} disabled={submitting}>
+            İptal
+          </button>
           <button
+            type="button"
             className="btn-publish"
             style={{ "--pub": CAT_COLORS[newPost.category] }}
-            onClick={handleCreate}
+            onClick={handlePublish}
+            disabled={submitting}
           >
-            Yayınla
+            {submitting ? "Gönderiliyor..." : "Yayınla"}
           </button>
         </div>
       </div>

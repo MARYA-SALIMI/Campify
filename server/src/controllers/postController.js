@@ -13,6 +13,7 @@ exports.createPost = async (req, res) => {
   }
 };
 
+
 // 2. Gönderileri Listeleme (GET)
 exports.getPosts = async (req, res) => {
   try {

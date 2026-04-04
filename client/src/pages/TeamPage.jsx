@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+/*import { useState, useEffect } from "react";
 import TeamList from "../components/teams/TeamList";
 import TeamCreate from "../components/teams/TeamCreate";
 import TeamDetail from "../components/teams/TeamDetail";
@@ -165,4 +165,4 @@ const TeamPage = () => {
   );
 };
 
-export default TeamPage;
+export default TeamPage;*/

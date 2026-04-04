@@ -1,27 +1,88 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { Link, useParams } from "react-router-dom";
+import "../../pages/Home.css";
+import PostCard from "./PostCard";
+import { fetchPostById } from "../../services/postService";
 
-export default function PostDetail({ post, i, newCardId, CATEGORIES, CAT_COLORS }) {
+const CATEGORIES = [
+  { id: "all", label: "Tümü", icon: "◈" },
+  { id: "book", label: "Kitap İlanı", icon: "📚" },
+  { id: "team", label: "Ekip Arama", icon: "👥" },
+  { id: "announcement", label: "Duyuru", icon: "📢" },
+  { id: "lost", label: "Kayıp Eşya", icon: "🔍" },
+];
+
+const CAT_COLORS = {
+  book: "#f0a04b",
+  team: "#6c9eeb",
+  announcement: "#e06b6b",
+  lost: "#7ec88b",
+};
+
+export default function PostDetail() {
+  const { postId } = useParams();
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    setPost(null);
+
+    if (!postId) {
+      setLoading(false);
+      setError("Geçersiz gönderi bağlantısı.");
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    fetchPostById(postId)
+      .then((data) => {
+        if (!cancelled) {
+          setPost(data);
+          setError(null);
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          const msg =
+            err.response?.data?.message ||
+            err.message ||
+            "Gönderi yüklenirken bir hata oluştu.";
+          setError(msg);
+          setPost(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [postId]);
+
   return (
-    <article
-      className={`post-card ${newCardId === post.id ? "post-card--new" : ""}`}
-      style={{ "--i": i, "--accent": CAT_COLORS[post.category] || "#aaa" }}
-    >
-      <div className="card-accent-bar" />
-      <div className="card-inner">
-        <div className="card-meta-row">
-          <span className="post-badge">
-            {CATEGORIES.find((c) => c.id === post.category)?.icon}{" "}
-            {CATEGORIES.find((c) => c.id === post.category)?.label}
-          </span>
-          <span className="post-time">{post.time}</span>
-        </div>
-        <h3 className="post-title">{post.title}</h3>
-        <p className="post-body">{post.content}</p>
-        <div className="post-author-row">
-          <div className="author-avatar">{post.avatar}</div>
-          <span className="author-name">@{post.author}</span>
-        </div>
-      </div>
-    </article>
+    <div className="home-root" style={{ padding: "1.5rem", maxWidth: 720, margin: "0 auto" }}>
+      <Link to="/" className="filter-chip" style={{ display: "inline-block", marginBottom: "1rem" }}>
+        ← Ana sayfa
+      </Link>
+
+      {loading && <p className="empty-state">Yükleniyor...</p>}
+      {!loading && error && <p className="empty-state" style={{ color: "#c44" }}>{error}</p>}
+      {!loading && !error && post && (
+        <PostCard
+          post={post}
+          i={0}
+          newCardId={null}
+          CATEGORIES={CATEGORIES}
+          CAT_COLORS={CAT_COLORS}
+          linkToDetail={false}
+        />
+      )}
+    </div>
   );
 }
