@@ -1,5 +1,4 @@
-
-const Chat = require('../models/Chat'); // Model isminin doğru olduğundan emin ol
+const Chat = require('../models/Chat');
 
 // Mesaj Oluştur
 exports.createMessage = async (req, res) => {
@@ -12,10 +11,11 @@ exports.createMessage = async (req, res) => {
     }
 };
 
-// Mesajları Getir
+// Mesajları Getir (chatId'ye göre filtrele)
 exports.getMessages = async (req, res) => {
     try {
-        const messages = await Chat.find().sort({ createdAt: 1 });
+        const { chatId } = req.query;
+        const messages = await Chat.find({ chatId }).sort({ createdAt: 1 });
         res.status(200).json(messages);
     } catch (error) {
         res.status(500).json({ message: error.message });

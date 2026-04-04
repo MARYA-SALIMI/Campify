@@ -1,33 +1,65 @@
 require('dotenv').config();
-
 const express = require('express');
 const mongoose = require('mongoose');
 
 const app = express();
 app.use(express.json());
 
-// Veritabanı Bağlantısı
-mongoose.connect(process.env.MONGODB_URI)
-    .then(() => console.log('MongoDB veritabanına başarıyla bağlanıldı! 🚀'))
-    .catch((err) => console.log('MongoDB bağlantı hatası:', err));
+app.use(cors({
+  origin: 'http://localhost:5173',
+  credentials: true
+}));
 
-// --- ROTALARI BURADA ÇAĞIRIYORUZ ---
-// Eğer hata verirse aşağıdaki satırın başındaki ./ kısmını kontrol et
+// --- GÜVENLİK VE BAĞLANTI AYARI ---
+const dbURI = process.env.MONGODB_URI;
 
-// index.js içinde rotaların en üstüne ekle
-app.get('/', (req, res) => {
-    res.send('Campify AI-Powered Campus OS API is Running! 🚀');
+const connectDB = async () => {
+    // Zaten bağlıysak tekrar deneme
+    if (mongoose.connection.readyState >= 1) return;
+
+    // Değişken boş mu kontrolü
+    if (!dbURI) {
+        throw new Error("MONGODB_URI değişkeni Vercel'de tanımlanmamış! Settings > Environment Variables kısmına eklemelisin.");
+    }
+
+    try {
+        await mongoose.connect(dbURI, { 
+            serverSelectionTimeoutMS: 10000 // 10 saniye bekle
+        });
+        console.log('MongoDB Bağlantısı Başarılı! 🚀');
+    } catch (err) {
+        // Hata türüne göre detay verelim
+        if (err.message.includes('Invalid scheme')) {
+            throw new Error("Link formatı hatalı! Link 'mongodb+srv://' ile başlamalı. Başına tırnak veya boşluk koymadığından emin ol.");
+        }
+        throw err;
+    }
+};
+
+// --- HATA YAKALAYICI (POSTMAN'DE GÖRECEĞİN KISIM) ---
+app.use(async (req, res, next) => {
+    try {
+        await connectDB();
+        next();
+    } catch (err) {
+        res.status(500).json({
+            durum: "Veritabanı Hatası",
+            mesaj: err.message,
+            ipucu: "Vercel panelindeki MONGODB_URI değerini kontrol et ve tekrar 'Redeploy' yap."
+        });
+    }
 });
+
+// --- ROTALAR ---
+app.get('/', (req, res) => res.send("Campify API Safe & Running! 🚀"));
+
 const commentRoutes = require('./src/routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
 
 const chatRoutes = require('./src/routes/chatRoutes');
 app.use('/api/chat', chatRoutes);
+
 const postRoutes = require('./src/routes/postRoutes');
 app.use('/api', postRoutes);
-// ----------------------------------
 
-const PORT = 3000;
-app.listen(PORT, () => {
-    console.log(`Campify sunucusu http://localhost:${PORT} adresinde çalışıyor...`);
-});
+module.exports = app;

@@ -18,4 +18,4 @@ const commentSchema = new mongoose.Schema({
   }
 }, { timestamps: true }); // timestamps, 'createdAt' ve 'updatedAt' tarihlerini otomatik ekler
 
-module.exports = mongoose.model('Comment', commentSchema);
+module.exports = mongoose.model('comments', commentSchema);

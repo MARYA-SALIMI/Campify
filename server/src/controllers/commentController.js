@@ -1,5 +1,7 @@
-const Comment = require('../models/Comment');
 
+
+const Comment = require('../models/Comment');
+const mongoose = require('mongoose');
 
 
 // 1. Ekleme
@@ -25,12 +27,38 @@ exports.listComments = async (req, res) => {
     } catch (err) { res.status(500).json(err); }
 };
 
-// 3. Güncelleme
+// 3. Güncelleme (Hata Ayıklama Modu)
 exports.updateComment = async (req, res) => {
     try {
-        const updated = await Comment.findByIdAndUpdate(req.params.commentId, { text: req.body.text }, { new: true });
+        // Vercel loglarında iz sürmek için bu satırlar kritik:
+        console.log("Bağlı olunan DB:", mongoose.connection.name);
+        console.log("Gelen ID:", req.params.commentId);
+        console.log("Gelen Veri:", req.body);
+
+        const updated = await Comment.findByIdAndUpdate(
+            req.params.commentId.trim(), // Görünmez boşlukları temizler
+            { text: req.body.text }, 
+            { new: true, runValidators: true }
+        );
+        
+        if (!updated) {
+            console.log("HATA: Veritabanında bu ID ile eşleşen kayıt bulunamadı.");
+            return res.status(404).json({ 
+                error: "Yorum bulunamadı.",
+                detay: "Veritabanında " + req.params.commentId + " ID'li bir kayıt yok." 
+            });
+        }
+
+        console.log("BAŞARI: Yorum güncellendi.");
         res.status(200).json(updated);
-    } catch (err) { res.status(400).json(err); }
+
+    } catch (err) { 
+        console.error("GÜNCELLEME HATASI:", err.message);
+        res.status(400).json({ 
+            error: "Güncelleme başarısız.", 
+            mesaj: err.message 
+        }); 
+    }
 };
 
 // 4. Silme
