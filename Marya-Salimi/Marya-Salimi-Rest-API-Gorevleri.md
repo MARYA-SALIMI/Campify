@@ -1,7 +1,7 @@
 # Marya Salimi'nin REST API Metotları
 
 **API Test Videosu:** [🎬](https://youtu.be/1lLLhhzn3CU)
-**Domain Adresi:** [https://campify-api.onrender.com]()
+**Domain Adresi:** [https://campify-api.onrender.com](https://campify-api.onrender.com)
 
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
