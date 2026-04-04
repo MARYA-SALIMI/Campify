@@ -13,7 +13,7 @@ const FILTERS = [
 ];
 
 const TeamPage = () => {
-  const currentUserId = localStorage.getItem("userId"); // Auth'tan gelecek
+  const currentUserId = localStorage.getItem("userId") || "65f123456789abcdef123456"; // Auth'tan gelecek
 
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -45,7 +45,7 @@ const TeamPage = () => {
       await joinTeam(teamId);
       setTeams((prev) =>
         prev.map((t) =>
-          t.id === teamId && !t.members.includes(currentUserId)
+          t.id === teamId && !t.members.map(String).includes(currentUserId)
             ? { ...t, members: [...t.members, currentUserId] }
             : t
         )
@@ -67,7 +67,7 @@ const TeamPage = () => {
       setTeams((prev) =>
         prev.map((t) =>
           t.id === teamId
-            ? { ...t, members: t.members.filter((m) => m !== currentUserId) }
+            ? { ...t, members: t.members.filter((m) => m.toString() !== currentUserId) }
             : t
         )
       );
