@@ -1,7 +1,8 @@
 # Ali Tutar'ın REST API Metotları
 
-**API Test Videosu:** https://youtu.be/mz4toZTekyo
-/n **Domain:** https://campify-melisa.vercel.app/
+**API Test Videosu:** https://youtu.be/mz4toZTekyo  
+
+**Domain:** https://campify-melisa.vercel.app/
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
 - **Request Body:** 
