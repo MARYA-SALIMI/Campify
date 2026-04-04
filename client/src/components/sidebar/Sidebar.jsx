@@ -25,6 +25,7 @@ const links = [
     ),
   },
   {
+<<<<<<< HEAD
     to: "/post",
     label: "Post",
     icon: (
@@ -35,6 +36,8 @@ const links = [
     ),
   },
   {
+=======
+>>>>>>> main
     to: "/messages",
     label: "Messages",
     icon: (

@@ -13,7 +13,11 @@ const FILTERS = [
 ];
 
 const TeamPage = () => {
+<<<<<<< HEAD
   const currentUserId = localStorage.getItem("userId"); // Auth'tan gelecek
+=======
+  const currentUserId = localStorage.getItem("userId") || "65f123456789abcdef123456"; // Auth'tan gelecek
+>>>>>>> main
 
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -27,7 +31,11 @@ const TeamPage = () => {
       setLoading(true);
       try {
         const data = await listTeams({ filterType: filter });
+<<<<<<< HEAD
         setTeams(Array.isArray(data) ? data : (data?.teams || []));
+=======
+        setTeams(Array.isArray(data) ? data : data.teams);
+>>>>>>> main
       } catch (err) {
         console.error("İlanlar yüklenemedi:", err);
       } finally {
@@ -45,7 +53,11 @@ const TeamPage = () => {
       await joinTeam(teamId);
       setTeams((prev) =>
         prev.map((t) =>
+<<<<<<< HEAD
           t.id === teamId && !t.members.includes(currentUserId)
+=======
+          t.id === teamId && !t.members.map(String).includes(currentUserId)
+>>>>>>> main
             ? { ...t, members: [...t.members, currentUserId] }
             : t
         )
@@ -67,7 +79,11 @@ const TeamPage = () => {
       setTeams((prev) =>
         prev.map((t) =>
           t.id === teamId
+<<<<<<< HEAD
             ? { ...t, members: t.members.filter((m) => m !== currentUserId) }
+=======
+            ? { ...t, members: t.members.filter((m) => m.toString() !== currentUserId) }
+>>>>>>> main
             : t
         )
       );
@@ -92,7 +108,11 @@ const TeamPage = () => {
     // Yeni ilan sonrası teamService.getTeams() ile yenilenebilir
     setShowCreate(false);
     const data = await listTeams();
+<<<<<<< HEAD
     setTeams(Array.isArray(data) ? data : (data?.teams || []));
+=======
+    setTeams(Array.isArray(data) ? data : data.teams);
+>>>>>>> main
   };
 
   return (

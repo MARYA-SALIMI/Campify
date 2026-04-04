@@ -7,6 +7,7 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
 
   if (!team) return null;
 
+<<<<<<< HEAD
   const isOwner = team.ownerId === currentUserId;
   const isMember = team.members?.includes(currentUserId);
   const isFull = team.members?.length >= team.capacity;
@@ -20,6 +21,40 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
     }
   };
 
+=======
+  //const isOwner = team.ownerId === currentUserId;
+  //const isMember = team.members?.includes(currentUserId);
+  const isOwner = team?.ownerId && currentUserId ? team.ownerId.toString() === currentUserId.toString() : false;
+const isMember = team?.members?.some(id => id && currentUserId && id.toString() === currentUserId.toString());
+const isFull = (team?.members?.length || 0) >= (team?.capacity || 0);
+  console.log("Team Owner ID:", team.ownerId, "Current User ID:", currentUserId);
+console.log("isOwner:", isOwner, "isMember:", isMember);
+ /* const handleJoin = async () => {
+    if(loading || isFull) return;
+    setLoading("join");
+    try {
+      await onJoin?.(team.id);
+    }catch(error) {
+      console.error("Katılma hatası:", error);
+    } finally {
+      setLoading("");
+    }
+  };*/
+  const handleJoin = async () => {
+  if (!team?.id && !team?._id) {
+    console.error("Takım ID'si bulunamadı!");
+    return;
+  }
+  setLoading("join");
+  try {
+    const targetId = team.id || team._id; 
+    console.log("Backend'e gönderilen ID:", targetId); 
+    await onJoin?.(targetId);
+  } finally {
+    setLoading("");
+  }
+};
+>>>>>>> main
   const handleLeave = async () => {
     setLoading("leave");
     try {
@@ -105,6 +140,7 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
             <div className="td-section">
               <p className="td-section-label">Üyeler</p>
               <div className="td-members">
+<<<<<<< HEAD
                 {team.members.map((memberId) => (
                   <div key={memberId} className="td-member">
                     <div className="td-member-avatar">
@@ -124,6 +160,38 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
               </div>
             </div>
           )}
+=======
+                {team.members.map((memberId,  index) => {
+                  if (!memberId) return null;
+                  const safeMemberId = String(memberId);
+                  const safeUserId = currentUserId ? String(currentUserId) : null;
+                  const safeOwnerId = team.ownerId ? String(team.ownerId) : null;
+                  return (
+          <div key={safeMemberId || index} className="td-member">
+            <div className="td-member-avatar">
+              {safeMemberId === safeOwnerId ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                </svg>
+              ) : (
+                safeMemberId.slice(0, 2).toUpperCase()
+              )}
+            </div>
+            
+            <span className="td-member-id">
+              {safeUserId && safeMemberId === safeUserId ? "Sen" : `Üye #${safeMemberId.slice(-4)}`}
+            </span>
+            
+            {safeMemberId === safeOwnerId && (
+              <span className="td-owner-label">Kurucu</span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
+>>>>>>> main
 
           {confirmDelete && (
             <div className="td-confirm">
@@ -140,7 +208,11 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
           )}
         </div>
 
+<<<<<<< HEAD
         <div className="td-footer">
+=======
+        {/*<div className="td-footer">
+>>>>>>> main
           {isOwner ? (
             <>
               <button className="td-btn td-btn--danger-outline" onClick={() => setConfirmDelete(true)}>
@@ -192,6 +264,38 @@ const TeamDetail = ({ team, currentUserId, onClose, onJoin, onLeave, onEdit, onD
               )}
             </button>
           )}
+<<<<<<< HEAD
+=======
+        </div>*/}
+      <div className="td-footer">
+          {!confirmDelete && (
+            <>
+              {isOwner ? (
+                <>
+                  <button className="td-btn td-btn--danger-outline" onClick={() => setConfirmDelete(true)}>
+                    İlanı Sil
+                  </button>
+                  <button className="td-btn td-btn--primary" onClick={() => onEdit?.(team)}>
+                    Düzenle
+                  </button>
+                </>
+              ) : isMember ? (
+                <button className="td-btn td-btn--leave" onClick={handleLeave} disabled={!!loading}>
+                  {loading === "leave" ? <span className="td-spinner" /> : "Ekipten Ayrıl"}
+                </button>
+              ) : (
+                <button
+                  className="td-btn td-btn--primary"
+                  onClick={handleJoin}
+                  disabled={isFull || !!loading}
+                  style={{ width: "100%", justifyContent: "center" }}
+                >
+                  {loading === "join" ? <span className="td-spinner" /> : (isFull ? "Ekip Dolu" : "Ekibe Katıl")}
+                </button>
+              )}
+            </>
+          )}
+>>>>>>> main
         </div>
 
       </div>
