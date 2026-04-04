@@ -1,14 +1,16 @@
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 app.use(express.json());
 
 app.use(cors({
-  origin: 'http://localhost:5173',
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
   credentials: true
 }));
+
 
 // --- GÜVENLİK VE BAĞLANTI AYARI ---
 const dbURI = process.env.MONGODB_URI;
@@ -61,5 +63,13 @@ app.use('/api/chat', chatRoutes);
 
 const postRoutes = require('./src/routes/postRoutes');
 app.use('/api', postRoutes);
+
+const authRoutes = require('./src/routes/authRoutes');
+app.use('/api/auth', authRoutes);
+
+const userRoutes = require('./src/routes/userRoutes');
+app.use('/api/user', userRoutes);
+
+
 
 module.exports = app;

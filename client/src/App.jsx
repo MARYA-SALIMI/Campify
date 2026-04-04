@@ -15,7 +15,7 @@ function App() {
 
   return (
     <div className="app-layout">
-      <Sidebar  darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)}/>
+      <Sidebar darkMode={darkMode} onToggle={() => setDarkMode(!darkMode)} />
       <main className="app-main">
         <div className="main-content">
           <AppRoutes />

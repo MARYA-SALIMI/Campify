@@ -1,22 +1,53 @@
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useState, useEffect } from 'react';
 
-const AuthContext = createContext(null);
+// 1. Context Oluşturma
+const AuthContext = createContext();
 
-export function AuthProvider({ children }) {
-  const [user, setUser] = useState({ name: "Ayşe" });
+// 2. Provider Bileşeni (Tüm uygulamayı saracak olan)
+export const AuthProvider = ({ children }) => {
+  const [currentUser, setCurrentUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
+  // Sayfa yenilendiğinde yerel hafızadan kullanıcıyı geri yükle
+  useEffect(() => {
+    const savedUser = localStorage.getItem('campify_user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+    setLoading(false);
+  }, []);
+
+  // Giriş Yapma Fonksiyonu
+  const login = (userData) => {
+    setCurrentUser(userData);
+    localStorage.setItem('campify_user', JSON.stringify(userData));
+  };
+
+  // Çıkış Yapma Fonksiyonu
   const logout = () => {
-    setUser(null);
-    window.location.href = "/";
+    setCurrentUser(null);
+    localStorage.removeItem('campify_user');
+  };
+
+  const value = {
+    currentUser,
+    login,
+    logout,
+    isAuthenticated: !!currentUser
   };
 
   return (
-    <AuthContext.Provider value={{ user, logout }}>
-      {children}
+    <AuthContext.Provider value={value}>
+      {!loading && children}
     </AuthContext.Provider>
   );
-}
+};
 
-export function useAuth() {
-  return useContext(AuthContext);
-}
+// 3. useAuth Kancası (Diğer sayfalarda çağırdığımız kısım)
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth bir AuthProvider içinde kullanılmalıdır!');
+  }
+  return context;
+};

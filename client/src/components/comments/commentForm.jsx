@@ -1,47 +1,31 @@
-// src/components/comments/commentForm.jsx
 import { useState } from 'react';
+import { createComment } from '../../services/api'; // veya commentService
 
-export default function CommentForm({ onAddComment, currentUser }) {
+export default function CommentForm({ postId, onCommentAdded }) {
   const [text, setText] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (text.trim()) {
-      onAddComment(text);
+    if (!text.trim()) return;
+
+    try {
+      await createComment(postId, { text });
       setText('');
+      onCommentAdded(); // Listeyi yenilemek için tetikleyici
+    } catch (err) {
+      alert("Yorum gönderilemedi!");
     }
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex gap-3 py-4 border-b border-gray-700/50">
-      <div className="flex-shrink-0">
-        <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-white font-bold text-lg">
-          {currentUser?.name?.charAt(0).toUpperCase() || 'C'}
-        </div>
-      </div>
-      
-      <div className="flex-1 flex flex-col pt-1">
-        <textarea
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Yanıtını Gönder..."
-          className="w-full bg-transparent text-gray-100 text-[15px] placeholder-gray-500 focus:outline-none resize-none"
-          rows="2"
-          onInput={(e) => {
-            e.target.style.height = 'auto';
-            e.target.style.height = e.target.scrollHeight + 'px';
-          }}
-        />
-        <div className="flex justify-end mt-2">
-          <button
-            type="submit"
-            disabled={!text.trim()}
-            className="px-4 py-1.5 rounded-full bg-emerald-500 text-white font-bold text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-emerald-600 transition-colors"
-          >
-            Yanıtla
-          </button>
-        </div>
-      </div>
+    <form onSubmit={handleSubmit} className="flex gap-2">
+      <input 
+        value={text} 
+        onChange={(e) => setText(e.target.value)}
+        className="flex-1 p-2 border rounded-lg dark:bg-gray-700"
+        placeholder="Yorum yaz..."
+      />
+      <button type="submit" className="bg-emerald-500 text-white px-4 rounded-lg">Gönder</button>
     </form>
   );
 }
