@@ -10,6 +10,7 @@ exports.createChat = async (participants) => {
 // 2. Kullanıcının dahil olduğu tüm sohbetleri listeleme (GET /chats)
 exports.getUserChats = async (userId) => {
   // İçinde bu kullanıcının ID'si geçen tüm sohbetleri bul
+  // İçinde bu kullanıcının ID'si geçen tüm sohbetleri bul
   return await Chat.find({ participants: userId })
     .sort({ updatedAt: -1 }); // En son mesajlaşılanlar en üstte çıksın
 };
