@@ -1,15 +1,30 @@
-/* =============================================
-   Home.css — kampüsboard
-   Dark theme, card-based, mobile-friendly
-   ============================================= */
+@import url('[fonts.googleapis.com](https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;700&display=swap)');
 
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap');
-
-/* ---- Root & Reset ---- */
-*, *::before, *::after {
+* {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+button {
+  outline: none !important;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-focus-ring-color: transparent;
+}
+
+button:focus,
+button:focus-visible,
+button:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+input {
+  outline: none;
+}
+
+input:focus {
+  outline: none;
 }
 
 :root {
@@ -18,17 +33,55 @@
   --surface2: #1e2029;
   --border: rgba(255, 255, 255, 0.07);
   --text: #e8e9ee;
-  --text-muted: #666b82;
-  --text-dim: #3e4259;
-  --radius: 16px;
-  --radius-sm: 10px;
+  --text-muted: #8b8f97;
+  --text-dim: #666b82;
+  --accent: #22c55e;
+  --accent-glow: rgba(34, 197, 94, 0.18);
+  --heart: #ef4444;
+  --radius: 14px;
+  --radius-sm: 8px;
   --font-display: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
-  --transition: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface2: #eef0f4;
+    --border: rgba(0, 0, 0, 0.08);
+    --text: #111216;
+    --text-muted: #555a66;
+    --text-dim: #888d99;
+    --accent-glow: rgba(34, 197, 94, 0.12);
+  }
+}
+
+[data-theme="light"] {
+  --bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface2: #eef0f4;
+  --border: rgba(0, 0, 0, 0.08);
+  --text: #111216;
+  --text-muted: #555a66;
+  --text-dim: #888d99;
+  --accent-glow: rgba(34, 197, 94, 0.12);
+}
+
+[data-theme="dark"] {
+  --bg: #0e0f13;
+  --surface: #16181f;
+  --surface2: #1e2029;
+  --border: rgba(255, 255, 255, 0.07);
+  --text: #e8e9ee;
+  --text-muted: #8b8f97;
+  --text-dim: #666b82;
+  --accent-glow: rgba(34, 197, 94, 0.18);
 }
 
 html, body, #root {
-  height: 100%;
+  min-height: 100%;
+  background: var(--bg);
 }
 
 body {
@@ -36,105 +89,87 @@ body {
   color: var(--text);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  transition: background 0.25s, color 0.25s;
 }
 
-/* ---- Layout ---- */
+/* ══════════════════════════════════════
+   SAYFA DÜZENİ
+   ══════════════════════════════════════ */
+
 .home-root {
   min-height: 100vh;
-  height: 100vh;
   display: flex;
   flex-direction: column;
-  max-width: 100%;
-  margin: 0 auto;
-  padding-bottom: 100px;
-  overflow: hidden;
-  padding:40px;
+  padding: 36px 40px;
+  background: var(--bg);
 }
 
-/* ---- Header ---- */
-.home-header {
-  padding: 40px 24px 24px;
-  position: relative;
-}
-
-.home-header::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  left: 24px;
-  right: 24px;
-  height: 1px;
-  background: var(--border);
-}
-
-.header-brand {
+.page-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 6px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
 }
 
-.brand-mark {
-  font-size: 22px;
-  background: linear-gradient(135deg, #f0a04b, #6c9eeb);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-}
-
-.brand-text {
+.page-header-text h1 {
   font-family: var(--font-display);
   font-size: 26px;
   font-weight: 800;
-  letter-spacing: -0.5px;
   color: var(--text);
 }
 
-.brand-text em {
-  font-style: normal;
-  background: linear-gradient(90deg, #f0a04b, #e06b6b);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-.header-tagline {
-  font-size: 13px;
+.page-header-text p {
+  margin-top: 5px;
   color: var(--text-muted);
-  letter-spacing: 0.3px;
+  font-size: 13px;
 }
 
-/* ---- Filter Bar ---- */
+.create-post-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  padding: 9px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  font-family: var(--font-body);
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.create-post-btn:hover {
+  opacity: 0.85;
+}
+
+/* ══════════════════════════════════════
+   FİLTRE BARI
+   ══════════════════════════════════════ */
+
 .filter-bar {
   display: flex;
   gap: 8px;
-  padding: 20px 24px 0;
-  overflow-x: auto;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-.filter-bar::-webkit-scrollbar {
-  display: none;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
 .filter-chip {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  border-radius: 100px;
-  border: 1px solid var(--border);
+  gap: 5px;
   background: var(--surface);
-  color: var(--text-muted);
-  font-family: var(--font-body);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 6px 14px;
   font-size: 13px;
   font-weight: 500;
-  white-space: nowrap;
+  font-family: var(--font-body);
+  color: var(--text-muted);
   cursor: pointer;
-  transition: all var(--transition);
-  flex-shrink: 0;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
 
 .filter-chip:hover {
@@ -143,115 +178,65 @@ body {
 }
 
 .filter-chip.active {
-  background: color-mix(in srgb, var(--chip-accent, #fff) 12%, transparent);
-  border-color: color-mix(in srgb, var(--chip-accent, #fff) 35%, transparent);
-  color: var(--chip-accent, #fff);
+  background: var(--surface2);
+  border-color: var(--accent);
+  color: var(--text);
   font-weight: 600;
 }
 
-/* ---- Post List ---- */
+/* ══════════════════════════════════════
+   GÖNDERİ LİSTESİ
+   ══════════════════════════════════════ */
+
 .post-list {
   display: flex;
   flex-direction: column;
-  padding: 24px 16px 0;
-  overflow-y: auto;
-  flex: 1;
-  gap: 20px; /* Kartlar arası boşluk */
-  width: 100%; 
+  gap: 12px;
 }
 
-/* ---- Post Card ---- */
 .post-card {
-  position: relative;
-  display: flex;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
-  animation: cardIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
-  animation-delay: calc(var(--i, 0) * 0.05s);
-  height: auto;
-  min-height: fit-content;
-}
-
-@keyframes cardIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  overflow: hidden;
+  transition: border-color 0.2s, background 0.2s;
 }
 
 .post-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--accent) 30%, transparent);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), 0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent);
-}
-
-.post-card--new {
-  animation: newCard 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
-}
-
-@keyframes newCard {
-  from {
-    opacity: 0;
-    transform: scale(0.94) translateY(-10px);
-    box-shadow: 0 0 0 3px var(--accent, #f0a04b);
-  }
-  60% {
-    box-shadow: 0 0 0 6px color-mix(in srgb, var(--accent, #f0a04b) 30%, transparent);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    box-shadow: none;
-  }
-}
-
-.card-accent-bar {
-  width: 4px;
-  flex-shrink: 0;
-  background: var(--accent, #aaa);
-  border-radius: 4px 0 0 4px;
+  border-color: rgba(255, 255, 255, 0.12);
+  background: var(--surface2);
 }
 
 .card-inner {
-  flex: 1;
   padding: 16px 18px;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.card-meta-row {
+.post-meta-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
 }
 
-.post-badge {
+.category-badge {
   display: inline-flex;
   align-items: center;
   gap: 5px;
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.3px;
-  text-transform: uppercase;
-  color: var(--accent, #aaa);
-  background: color-mix(in srgb, var(--accent, #aaa) 12%, transparent);
-  border: 1px solid color-mix(in srgb, var(--accent, #aaa) 25%, transparent);
-  padding: 3px 9px;
-  border-radius: 100px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: var(--cat-color, var(--accent));
+  background: color-mix(in srgb, var(--cat-color, var(--accent)) 12%, transparent);
+  border: 1px solid color-mix(in srgb, var(--cat-color, var(--accent)) 30%, transparent);
+  border-radius: 6px;
+  padding: 3px 8px;
 }
 
 .post-time {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-dim);
-  white-space: nowrap;
 }
 
 .post-title {
@@ -263,328 +248,453 @@ body {
 }
 
 .post-body {
-  font-size: 14px;
   color: var(--text-muted);
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
-.post-author-row {
+.post-footer {
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: flex-start; /* Butonu sola yaslar */
   margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
 }
 
+/* Yazar bilgilerini tamamen gizler */
+.post-author {
+  display: none !important;
+}
+
+
+
 .author-avatar {
-  width: 28px;
-  height: 28px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent, #aaa) 20%, transparent);
-  color: var(--accent, #aaa);
+  background: var(--surface2);
+  border: 1px solid var(--border);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 700;
-  font-family: var(--font-display);
-  flex-shrink: 0;
+  color: var(--text);
 }
 
 .author-name {
-  font-size: 12px;
-  color: var(--text-muted);
-}
-
-/* ---- Empty State ---- */
-.empty-state {
-  text-align: center;
-  padding: 64px 0;
-  color: var(--text-dim);
-  font-size: 14px;
-}
-
-/* ---- FAB ---- */
-.fab {
-  position: fixed;
-  bottom: 32px;
-  right: calc(max(12px, (100vw - 680px) / 2 + 12px));
-  width: 58px;
-  height: 58px;
-  border-radius: 50%;
-  border: none;
-  background: linear-gradient(135deg, #7ec88b 0%, #5ab36a 100%);
-  color: #0e0f13;
-  cursor: pointer;
-  box-shadow: 0 4px 20px rgba(126, 200, 139, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: transform var(--transition), box-shadow var(--transition);
-  z-index: 100;
-}
-
-.fab:hover {
-  transform: scale(1.08) rotate(90deg);
-  box-shadow: 0 8px 28px rgba(126, 200, 139, 0.65);
-}
-
-.fab:active {
-  transform: scale(0.96);
-}
-
-.fab-plus {
-  font-size: 28px;
-  font-weight: 300;
-  line-height: 1;
-  transition: transform var(--transition);
-}
-
-
-/* Ekranın tamamını kaplayan ve içindekini ortalayan arka plan */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background-color: rgba(0, 0, 0, 0.6); /* Arka planı hafif koyulaştırır */
-  backdrop-filter: blur(4px); /* Görseldeki gibi arkadaki siteyi bulanıklaştırır */
-  display: flex;
-  align-items: center; /* Dikeyde ortalar */
-  justify-content: center; /* Yatayda ortalar */
-  z-index: 9999; /* Her şeyin üstünde olmasını sağlar */
-}
-
-/* Modal kutusunun kendisi */
-.modal {
-  background-color: #1a1d24; /* Görseldeki koyu gri-mavi renk */
-  width: 100%;
-  max-width: 600px; /* Modalın çok fazla genişlemesini engeller */
-  border-radius: 16px;
-  padding: 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-@keyframes overlayIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-
-@keyframes modalUp {
-  from { transform: translateY(60px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.modal-header h2 {
-  font-family: var(--font-display);
-  font-size: 20px;
-  font-weight: 800;
-}
-
-.modal-close {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-size: 14px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all var(--transition);
-}
-
-.modal-close:hover {
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-/* Modal Fields */
-.modal-field {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.modal-field label {
-  font-size: 12px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.6px;
-  color: var(--text-muted);
-}
-
-.modal-field input,
-.modal-field textarea {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 16px;
-  color: var(--text);
-  font-family: var(--font-body);
-  font-size: 15px;
-  outline: none;
-  transition: border-color var(--transition);
-  resize: none;
-}
-
-.modal-field input:focus,
-.modal-field textarea:focus {
-  border-color: rgba(240, 160, 75, 0.5);
-}
-
-.modal-field input::placeholder,
-.modal-field textarea::placeholder {
-  color: var(--text-dim);
-}
-
-
-/* Category Grid */
-.cat-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-
-.cat-option {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 14px;
-  border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text-muted);
-  font-family: var(--font-body);
   font-size: 13px;
+  color: var(--text-muted);
   font-weight: 500;
-  cursor: pointer;
-  transition: all var(--transition);
 }
 
-.cat-option:hover {
-  color: var(--text);
-  border-color: rgba(255, 255, 255, 0.15);
-}
-
-.cat-option.selected {
-  background: color-mix(in srgb, var(--cat) 14%, transparent);
-  border-color: color-mix(in srgb, var(--cat) 40%, transparent);
-  color: var(--cat);
-  font-weight: 600;
-}
-
-/* Modal Actions */
-.modal-actions {
-  display: flex;
-  gap: 12px;
-  justify-content: flex-end;
-  margin-top: 4px;
-}
-/* --- Modal İçindeki Yayınla Butonu --- */
-.btn-publish {
-  padding: 10px 24px;
-  border-radius: 50px; /* Görseldeki gibi tam yuvarlak köşeler */
-  border: none;
-  background: #22c55e; /* Görseldeki canlı yeşil renk */
-  color: #0e0f13;
-  font-family: var(--font-display);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all var(--transition);
-  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.2); 
-}
-
-.btn-publish:hover {
-  background: #16a34a; /* Hover durumunda hafif koyu yeşil */
-  transform: translateY(-1px);
-  box-shadow: 0 6px 16px rgba(34, 197, 94, 0.3);
-}
-
-.btn-publish:active {
-  transform: translateY(0);
-}
-
-
-/* --- Sayfa Sağ Üstündeki Yeni Buton ve Başlık Düzeni --- */
-.page-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-  padding: 0 16px;
-}
-
-.page-header-text h1 {
-  margin: 0;
-  font-size: 24px;
-  color: #ffffff;
-}
-
-.page-header-text p {
-  margin: 6px 0 0 0;
-  font-size: 14px;
-  color: #8b8f97;
-}
-
-.btn-create-top {
-  padding: 10px 20px;
-  border-radius: 50px;
-  border: none;
-  background: #22c55e; /* Görseldeki yeşil renk */
-  color: #000000;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.action-btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  font-weight: 600;
+  font-family: var(--font-body);
+  font-size: 13px;
+  padding: 0;
+  transition: color 0.2s;
 }
 
-.btn-create-top:hover {
-  background: #16a34a;
-  transform: scale(1.02);
+.action-btn:hover {
+  color: var(--text-muted);
 }
 
+/* ══════════════════════════════════════
+   MODAL OVERLAY
+   ══════════════════════════════════════ */
 
-/* ---- Responsive ---- */
-@media (max-width: 480px) {
-  .home-header {
-    padding: 28px 16px 20px;
-  }
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
 
-  .filter-bar {
-    padding: 16px 16px 0;
-  }
+.modal {
+  width: 100%;
+  max-width: 600px;
+  background: var(--surface);
+  border-radius: 20px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
 
-  .post-list {
-    padding: 16px 8px 0;
-  }
+/* ══════════════════════════════════════
+   YORUMLAR MODALI
+   ══════════════════════════════════════ */
 
-  .fab {
-    right: 12px;
-    bottom: 24px;
-  }
+.comment-modal {
+  height: 85vh;
+  display: flex;
+  flex-direction: column;
+}
 
-  .modal {
-    padding: 24px 20px 36px;
-  }
+.premium-comment-header {
+  text-align: center;
+  padding: 15px 20px;
+  font-size: 20px;
+  font-weight: 800;
+  font-family: var(--font-display);
+  color: var(--accent);
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  letter-spacing: 0.3px;
+  box-shadow: 0 2px 20px var(--accent-glow);
+  flex-shrink: 0;
+}
 
-  .cat-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.ig-comments-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.ig-comments-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px 16px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.ig-empty {
+  color: var(--text-muted);
+  font-size: 14px;
+  text-align: center;
+  padding: 24px 0;
+}
+
+/* ══════════════════════════════════════
+   TEK YORUM
+   ══════════════════════════════════════ */
+
+.ig-comment {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.ig-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.ig-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.ig-main-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.ig-text-block {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.ig-username {
+  font-weight: 700;
+  color: var(--text);
+  margin-right: 2px;
+}
+
+.ig-comment-text {
+  color: var(--text);
+  font-weight: 400;
+}
+
+.ig-heart-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-dim);
+  padding: 2px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  transition: color 0.15s, transform 0.15s;
+  border-radius: 4px;
+}
+
+.ig-heart-btn:hover {
+  color: var(--heart);
+  transform: scale(1.2);
+}
+
+.ig-heart-btn.liked {
+  color: var(--heart);
+}
+
+.ig-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 5px;
+}
+
+.ig-time {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.ig-action-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  padding: 0;
+  font-family: var(--font-body);
+  transition: color 0.15s;
+}
+
+.ig-action-link:hover {
+  color: var(--text-muted);
+}
+
+/* ══════════════════════════════════════
+   YORUM FORMU — yazar avatarı gizli
+   ══════════════════════════════════════ */
+
+.ig-form-fixed {
+  border-top: 1px solid var(--border);
+  padding: 12px 16px;
+  background: var(--surface);
+  flex-shrink: 0;
+}
+
+.ig-replying-to {
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ig-cancel-reply {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  font-family: var(--font-body);
+}
+
+.form-input-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Yorum yazma alanındaki kullanıcı avatarını gizle */
+.ig-avatar-small {
+  display: none;
+}
+
+.ig-input {
+  flex: 1;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 8px 14px;
+  font-size: 14px;
+  color: var(--text);
+  font-family: var(--font-body);
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.ig-input::placeholder {
+  color: var(--text-dim);
+}
+
+.ig-input:focus {
+  border-color: var(--accent);
+}
+
+.ig-submit {
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 0 4px;
+  font-family: var(--font-body);
+  transition: opacity 0.2s;
+}
+
+.ig-submit:hover {
+  opacity: 0.75;
+}
+
+/* ══════════════════════════════════════
+   BEĞENİLER MODALI
+   ══════════════════════════════════════ */
+
+.likes-overlay {
+  z-index: 10000;
+}
+
+.likes-modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 300px;
+  max-height: 400px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.likes-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.likes-header h3 {
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.likes-close-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  padding: 4px;
+  border-radius: 4px;
+  transition: color 0.15s;
+}
+
+.likes-close-btn:hover {
+  color: var(--text);
+}
+
+.likes-list {
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+.likes-empty {
+  color: var(--text-muted);
+  font-size: 13px;
+  text-align: center;
+  padding: 12px 0;
+}
+
+.like-user-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 8px;
+  border-radius: var(--radius-sm);
+  transition: background 0.15s;
+}
+
+.like-user-row:hover {
+  background: var(--surface2);
+}
+
+.like-avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  flex-shrink: 0;
+}
+
+.like-user-row span {
+  font-size: 14px;
+  color: var(--text);
+  font-weight: 500;
+}
+/* Instagram Yanıtları Gör Butonu ve Çizgisi */
+.inst-replies-section {
+  margin-top: 8px;
+}
+
+.inst-view-replies {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 0;
+  outline: none !important;
+}
+
+.inst-view-replies:hover {
+  color: var(--text-muted);
+}
+
+.inst-view-replies .line {
+  width: 24px;
+  height: 1px;
+  background: var(--text-dim);
+  opacity: 0.5;
+}
+
+.inst-replies-list {
+  margin-top: 8px;
 }

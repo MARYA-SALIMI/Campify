@@ -1,22 +1,14 @@
-import { Routes, Route } from "react-router-dom";
-import Home from "../pages/Home";
-/*import ProfilePage from "../pages/ProfilePage";
-import PostPage from "../pages/PostPage";
-import MessagePage from "../pages/MessagePage";*/
-import TeamPage from "../pages/TeamPage";
+import { Routes, Route, Navigate } from "react-router-dom";
+import MessagePage from "../pages/MessagePage";
+import Profile from "../pages/ProfilePage";
 
-function AppRoutes() {
+export default function AppRoutes({ isDark }) {
   return (
     <Routes>
-     
-      <Route path="/" element={<Home />} />
-      {/*<Route path="/post" element={<PostPage />} />
-      <Route path="/messages" element={<MessagePage />} />
-      <Route path="/profile" element={<ProfilePage />} />*/}
-      <Route path="/team" element={<TeamPage />} />
-      
+      <Route path="/" element={<Navigate to="/messages" />} />
+      <Route path="/profile" element={<Profile isDark={isDark} />} />
+      <Route path="/messages" element={<MessagePage isDark={isDark} />} />
+      <Route path="*" element={<Navigate to="/messages" />} />
     </Routes>
   );
 }
-
-export default AppRoutes;
