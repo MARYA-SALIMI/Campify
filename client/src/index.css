@@ -1,68 +1,97 @@
-:root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+/* Tailwind v4 Import */
+@import "tailwindcss";
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+@import url('https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap');
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
+@layer base {
+  * { 
+    margin: 0; 
+    padding: 0; 
+    box-sizing: border-box; 
   }
-  a:hover {
-    color: #747bff;
+  
+  body { 
+    font-family: 'Inter', sans-serif; 
+    min-height: 100vh;
+    /* Kendi arka plan rengini App.css'den alacak */
   }
-  button {
-    background-color: #f9f9f9;
+}
+
+@layer components {
+  /* Arkadaşının Premium Tasarımları - Senin renk değişkenlerine bağladım */
+  .glass-premium {
+    background: var(--bg-panel-2);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--border-green);
+    border-radius: 28px;
+  }
+  
+  .input-premium {
+    background: var(--bg-panel);
+    border: 1px solid var(--border-soft);
+    border-radius: 18px;
+    padding: 14px 18px;
+    color: var(--text-main);
+    font-size: 15px;
+    transition: all 0.25s;
+    width: 100%;
+  }
+
+  .input-premium:focus {
+    outline: none;
+    border-color: var(--green);
+    box-shadow: 0 0 0 4px var(--green-dark);
+  }
+  
+  .btn-premium {
+    background: linear-gradient(105deg, var(--green), var(--green-2));
+    border: none;
+    border-radius: 18px;
+    padding: 14px 28px;
+    font-weight: 600;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .btn-premium:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 15px 30px -10px rgba(34,197,94,0.4); 
+  }
+  
+  .btn-outline {
+    background: transparent;
+    border: 1.5px solid var(--border-green);
+    border-radius: 18px;
+    padding: 12px 24px;
+    font-weight: 500;
+    color: var(--green);
+    cursor: pointer;
+    transition: all 0.25s;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 14px;
+    border-radius: 40px;
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  .badge-green { 
+    background: var(--green-dark); 
+    border: 1px solid var(--border-green); 
+    color: #4ade80; 
+  }
+
+  .gradient-text { 
+    background: linear-gradient(125deg, #22c55e, #4ade80, #86efac); 
+    -webkit-background-clip: text; 
+    background-clip: text; 
+    color: transparent; 
   }
 }

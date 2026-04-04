@@ -27,7 +27,7 @@ const TeamPage = () => {
       setLoading(true);
       try {
         const data = await listTeams({ filterType: filter });
-        setTeams(Array.isArray(data) ? data : data.teams);
+        setTeams(Array.isArray(data) ? data : (data?.teams || []));
       } catch (err) {
         console.error("İlanlar yüklenemedi:", err);
       } finally {
@@ -92,7 +92,7 @@ const TeamPage = () => {
     // Yeni ilan sonrası teamService.getTeams() ile yenilenebilir
     setShowCreate(false);
     const data = await listTeams();
-    setTeams(Array.isArray(data) ? data : data.teams);
+    setTeams(Array.isArray(data) ? data : (data?.teams || []));
   };
 
   return (
