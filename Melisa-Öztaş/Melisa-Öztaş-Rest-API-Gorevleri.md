@@ -9,7 +9,8 @@
 - **Request Body:**
    ```json
   {
-    "content": "Yorum metni buraya gelecek"
+"text": "Harika bir paylaşım olmuş, emeğinize sağlık!",
+  "authorId": "69c30b8dd606814fdd06840b"
   }
   ```
 - **Authentication:** Bearer Token gerekli
