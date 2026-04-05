@@ -1,5 +1,5 @@
 # Sinem Havan'ın Web Frontend Görevleri
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** [Link buraya eklenecek](https://youtu.be/L2DXvv4ymvI?si=tYhd1KnJ_sZ2iCA1)
 
 **Domain Linki:** [https://campify-frontend.onrender.com](https://campify-frontend.onrender.com)
 
