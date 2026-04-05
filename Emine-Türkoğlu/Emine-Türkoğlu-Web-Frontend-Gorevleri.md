@@ -1,5 +1,5 @@
 # Emine Türkoğlu'un Web Frontend Görevleri
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)  
+**Front-end Test Videosu:** [Link buraya eklenecek](https://www.youtube.com/watch?v=H0WN188jFdo)  
 
 **DOMAIN LİNKİ:**[TIKLAYINIZ](https://campify-frontend.onrender.com)
 ## 1. Ekip İlanı Oluşturma Sayfası
