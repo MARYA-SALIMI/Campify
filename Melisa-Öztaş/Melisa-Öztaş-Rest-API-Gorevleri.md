@@ -6,13 +6,11 @@
 ## 1. Yorum Ekleme
 - **Endpoint:** `POST /posts/{postId}/comments`
 - **Path Parameters:** - `postId` (string, required) - Yorum yapılacak gönderinin ID'si
-- **Request Body:**
-   ```json
+- **Request Body:** ```json
   {
-"text": "Harika bir paylaşım olmuş, emeğinize sağlık!",
+  "text": "Harika bir paylaşım olmuş, emeğinize sağlık!",
   "authorId": "69c30b8dd606814fdd06840b"
-  }
-  ```
+  }```
 - **Authentication:** Bearer Token gerekli
 - **Response:** `201 Created` - Yorum başarıyla eklendi
 
@@ -28,7 +26,7 @@
 - **Request Body:**
   ```json
   {
-    "content": "Güncellenmiş yorum metni"
+    "text": "Bu yorumu güncelledim, her şey harika!"
   }
   ```
 - **Authentication:** Bearer Token gerekli (Yalnızca yorumu yazan kullanıcı)
@@ -45,7 +43,11 @@
 - **Request Body:**
   ```json
   {
-    "participantId": "hedef_kullanici_id"
+    
+  "chatId": "65f1a2b3c4d5e6f7g8h9i0j1",
+  "text": "Merhaba, bu bir test mesajıdır",
+  "from": "kullanici_id_buraya"
+
   }
   ```
 - **Authentication:** Bearer Token gerekli
