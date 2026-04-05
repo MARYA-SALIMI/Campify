@@ -1,5 +1,5 @@
 # Marya Salimi'nin Web Frontend Görevleri
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** [https://youtu.be/Lc_fbc9uYR8](https://youtu.be/Lc_fbc9uYR8)
 
 **Domain Liniki:** [https://campify-frontend.onrender.com ](https://campify-frontend.onrender.com )
 
