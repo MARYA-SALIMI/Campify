@@ -11,7 +11,8 @@
   {
   "text": "Harika bir paylaşım olmuş, emeğinize sağlık!",
   "authorId": "69c30b8dd606814fdd06840b"
-  }```
+  }
+  ```
 - **Authentication:** Bearer Token gerekli
 - **Response:** `201 Created` - Yorum başarıyla eklendi
 
