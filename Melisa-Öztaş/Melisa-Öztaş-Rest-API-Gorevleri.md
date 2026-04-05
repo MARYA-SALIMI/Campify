@@ -6,7 +6,8 @@
 ## 1. Yorum Ekleme
 - **Endpoint:** `POST /posts/{postId}/comments`
 - **Path Parameters:** - `postId` (string, required) - Yorum yapılacak gönderinin ID'si
-- **Request Body:** ```json
+- **Request Body:**
+   ```json
   {
     "content": "Yorum metni buraya gelecek"
   }
@@ -23,7 +24,8 @@
 ## 3. Yorum Güncelleme
 - **Endpoint:** `PUT /comments/{commentId}`
 - **Path Parameters:** - `commentId` (string, required) - Güncellenecek yorumun ID'si
-- **Request Body:** ```json
+- **Request Body:**
+  ```json
   {
     "content": "Güncellenmiş yorum metni"
   }
@@ -39,7 +41,8 @@
 
 ## 5. Sohbet Oluşturma
 - **Endpoint:** `POST /chats`
-- **Request Body:** ```json
+- **Request Body:**
+  ```json
   {
     "participantId": "hedef_kullanici_id"
   }
