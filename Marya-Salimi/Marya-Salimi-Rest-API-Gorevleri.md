@@ -2,6 +2,8 @@
 
 **API Test Videosu:** [🎬](https://youtu.be/1lLLhhzn3CU)
 
+**Domain Adresi:** [https://campify-api.onrender.com](https://campify-api.onrender.com)
+
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
 - **Request Body:**  
