@@ -16,6 +16,24 @@ exports.getUserChats = async (userId) => {
 exports.sendMessage = async (chatId, senderId, content) => {
   const newMessage = new Message({ chatId, senderId, content });
   const savedMessage = await newMessage.save();
-  await Chat.findByIdAndUpdate(chatId, { lastMessage: savedMessage._id });
+
+  await Chat.findByIdAndUpdate(chatId, {
+    lastMessage: savedMessage._id
+  });
+
   return savedMessage;
 };
+
+module.exports = {
+  createChat,
+  getUserChats,
+  sendMessage
+};
+
+
+
+
+
+/* await Chat.findByIdAndUpdate(chatId, { lastMessage: savedMessage._id });
+ return savedMessage;
+};*/

@@ -57,10 +57,7 @@ export async function fetchPostById(postId) {
   return mapPostFromServer(data);
 }
 
-/*export async function createPost(payload) {
-  const { data } = await api.post("/posts", payload);
-  return mapPostFromServer(data);
-}*/
+
 
 export async function createPost(payload) {
     // Önce localStorage'da giriş yapmış bir kullanıcı var mı diye bakıyoruz,
