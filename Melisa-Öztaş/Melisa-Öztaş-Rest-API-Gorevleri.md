@@ -2,7 +2,7 @@
 
 **API Test Videosu:** https://youtu.be/mz4toZTekyo  
 
-**Domain:** https://campify-melisa.vercel.app/
+**Domain Adresi:** https://campify-melisa.vercel.app/
 ## 1. Üye Olma
 - **Endpoint:** `POST /auth/register`
 - **Request Body:** 
