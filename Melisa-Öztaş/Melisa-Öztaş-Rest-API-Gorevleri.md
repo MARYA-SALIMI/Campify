@@ -1,4 +1,4 @@
-# Ali Tutar'ın REST API Metotları
+# Melisa Öztaş'ın REST API Metotları
 
 **API Test Videosu:** https://youtu.be/mz4toZTekyo  
 
