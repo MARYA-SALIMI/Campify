@@ -1,46 +1,60 @@
-# Ali Tutar'ın REST API Metotları
+# Sinem Havan'ın REST API Metotları
+**API Test Videosu:** [Tıklayınız](https://youtu.be/4EXKfo3tEKs?si=d-r81CgxBREt7PCA)  
+**Domain Adresi:** [https://campify-api-l1vf.onrender.com/](https://campify-api-l1vf.onrender.com/)
 
-**API Test Videosu:** [Link buraya eklenecek](https://example.com)
-
-## 1. Üye Olma
-- **Endpoint:** `POST /auth/register`
-- **Request Body:** 
-  ```json
-  {
-    "email": "kullanici@example.com",
-    "password": "Guvenli123!",
-    "firstName": "Ahmet",
-    "lastName": "Yılmaz"
-  }
-  ```
-- **Response:** `201 Created` - Kullanıcı başarıyla oluşturuldu
-
-## 2. Kullanıcı Bilgilerini Görüntüleme
-- **Endpoint:** `GET /users/{userId}`
-- **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
+## 1. Gönderi Oluşturma
+- **Endpoint:** `POST /posts`
 - **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK` - Kullanıcı bilgileri başarıyla getirildi
-
-## 3. Kullanıcı Bilgilerini Güncelleme
-- **Endpoint:** `PUT /users/{userId}`
-- **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
 - **Request Body:** 
-  ```json
+```json
   {
-    "firstName": "Ahmet",
-    "lastName": "Yılmaz",
-    "email": "yeniemail@example.com",
-    "phone": "+905551234567"
+    "baslik": "post123",
+    "icerik": "Gönderi içeriği buraya gelecek",
+    "kategori": "Genel"
   }
-  ```
-- **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK` - Kullanıcı başarıyla güncellendi
+```
+- **Response:** `201 Created` - Gönderi başarıyla oluşturuldu
 
-## 4. Kullanıcı Silme
-- **Endpoint:** `DELETE /users/{userId}`
+## 2. Gönderi Listeleme
+- **Endpoint:** `GET /posts`
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Gönderiler başarıyla listelendi
+
+## 3. Gönderi Güncelleme
+- **Endpoint:** `PUT /posts/{postId}`
 - **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
-- **Authentication:** Bearer Token gerekli (Yönetici yetkisi veya kendi hesabını silme yetkisi)
-- **Response:** `204 No Content` - Kullanıcı başarıyla silindi
+  - `postId` (string, required) - Gönderi ID'si
+- **Request Body:** 
+```json
+  {
+    "baslik": "post123",
+    "icerik": "Güncellenmiş gönderi içeriği",
+    "kategori": "Genel"
+  }
+```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Gönderi başarıyla güncellendi
+
+## 4. Gönderi Silme
+- **Endpoint:** `DELETE /posts/{postId}`
+- **Path Parameters:** 
+  - `postId` (string, required) - Gönderi ID'si
+- **Authentication:** Bearer Token gerekli (Yönetici yetkisi veya gönderi sahibi)
+- **Response:** `204 No Content` - Gönderi başarıyla silindi
+
+## 5. Mesaj Gönderme
+- **Endpoint:** `POST /messages`
+- **Authentication:** Bearer Token gerekli
+- **Request Body:** 
+```json
+  {
+    "aliciId": "user123",
+    "icerik": "Merhaba, nasılsın?"
+  }
+```
+- **Response:** `201 Created` - Mesaj başarıyla gönderildi
+
+## 6. Sohbet Listeleme
+- **Endpoint:** `GET /chats`
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Sohbetler başarıyla listelendi
