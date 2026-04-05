@@ -6,7 +6,8 @@
 ## 1. Yorum Ekleme
 - **Endpoint:** `POST /posts/{postId}/comments`
 - **Path Parameters:** - `postId` (string, required) - Yorum yapılacak gönderinin ID'si
-- **Request Body:** ```json
+- **Request Body:**
+  ```json
   {
   "text": "Harika bir paylaşım olmuş, emeğinize sağlık!",
   "authorId": "69c30b8dd606814fdd06840b"
