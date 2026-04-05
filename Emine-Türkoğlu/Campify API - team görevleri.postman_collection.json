@@ -92,50 +92,6 @@
       "response": []
     },
     {
-      "name": "http://campify-api-2nzn.onrender.com/v1/teams/69c556b2093703fe848fd1ee",
-      "protocolProfileBehavior": {
-        "disableBodyPruning": true
-      },
-      "request": {
-        "auth": {
-          "type": "bearer",
-          "bearer": [
-            {
-              "key": "token",
-              "value": "gecici-super-token-123",
-              "type": "string"
-            }
-          ]
-        },
-        "method": "GET",
-        "header": [],
-        "body": {
-          "mode": "raw",
-          "raw": "",
-          "options": {
-            "raw": {
-              "language": "json"
-            }
-          }
-        },
-        "url": {
-          "raw": "http://campify-api-2nzn.onrender.com/v1/teams/69c556b2093703fe848fd1ee",
-          "protocol": "http",
-          "host": [
-            "campify-api-2nzn",
-            "onrender",
-            "com"
-          ],
-          "path": [
-            "v1",
-            "teams",
-            "69c556b2093703fe848fd1ee"
-          ]
-        }
-      },
-      "response": []
-    },
-    {
       "name": "https://campify-api-2nzn.onrender.com/v1/teams/69c556b2093703fe848fd1ee",
       "request": {
         "auth": {
@@ -177,7 +133,7 @@
       "response": []
     },
     {
-      "name": "https://campify-api-2nzn.onrender.com/v1/teams/69c54e633dca6528eed85ab6",
+      "name": "https://campify-api-2nzn.onrender.com/v1/teams/",
       "request": {
         "auth": {
           "type": "bearer",
@@ -251,7 +207,7 @@
       "response": []
     },
     {
-      "name": "https://campify-api-2nzn.onrender.com/v1/teams/69c5868e028d3ee69eec1bb6/leave",
+      "name": "https://campify-api-2nzn.onrender.com/v1/teams/69c5515ecff58bba9f46de4a/leave",
       "request": {
         "auth": {
           "type": "bearer",
