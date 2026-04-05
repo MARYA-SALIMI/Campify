@@ -1,0 +1,165 @@
+{
+	"info": {
+		"_postman_id": "39e04fb2-a5ff-46be-9b45-9831e229455e",
+		"name": "Melisa Öztaş - Campify",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50533983",
+		"_collection_link": "https://oztasmelisa1864-1881775.postman.co/workspace/melisa's-Workspace~e90a3ac0-affd-4be5-80fe-e4394da509e3/collection/50533983-39e04fb2-a5ff-46be-9b45-9831e229455e?action=share&source=collection_link&creator=50533983"
+	},
+	"item": [
+		{
+			"name": "1.Yorum Ekleme",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"text\": \"Harika bir paylaşım olmuş, emeğinize sağlık!\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/posts/65f1a2b3c4d5e6f7a8b9c0d1/comments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"posts",
+						"65f1a2b3c4d5e6f7a8b9c0d1",
+						"comments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "2.Yorum Listeleme",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/posts/65f1a2b3c4d5e6f7a8b9c0d1/comments",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"posts",
+						"65f1a2b3c4d5e6f7a8b9c0d1",
+						"comments"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "3.Yorum Güncelleme",
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{ \"text\": \"Bu yorumu güncelledim, her şey harika!\" }",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/comments/69c4ff1cda4a390c7460de19",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"comments",
+						"69c4ff1cda4a390c7460de19"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "4.Yorum Silme",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/comments/69c4ff1cda4a390c7460de19",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"comments",
+						"69c4ff1cda4a390c7460de19"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "5.Sohbet Oluşturma",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"receiverId\": \"65f1a2b3c4d5e6f7a8b9c0d5\",\r\n  \"initialMessage\": \"Selam, Campify projesinde birlikte çalışabilir miyiz?\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://localhost:3000/api/chats",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"chats"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "6.Mesaj Silme",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:3000/api/messages/65f1a2b3c4d5e6f7a8b9c0f9",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"messages",
+						"65f1a2b3c4d5e6f7a8b9c0f9"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
