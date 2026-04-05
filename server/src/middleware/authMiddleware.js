@@ -10,6 +10,7 @@ module.exports = (req, res, next) => {
     req.user = decoded;
     next();
   } catch (err) {
+    console.log("🔥 TOKEN DOĞRULAMA HATASI:", err.message);
     return res.status(401).json({ code: "UNAUTHORIZED", message: "Kimlik doğrulama başarısız" });
   }
 };
