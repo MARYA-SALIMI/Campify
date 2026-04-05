@@ -1,141 +1,155 @@
-# Ali Tutar'ın Web Frontend Görevleri
+# Sinem Havan'ın Web Frontend Görevleri
 **Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
 
-## 1. Üye Olma (Kayıt) Sayfası
-- **API Endpoint:** `POST /auth/register`
-- **Görev:** Kullanıcı kayıt işlemi için web sayfası tasarımı ve implementasyonu
+**Domain Linki:** [https://campify-frontend.onrender.com](https://campify-frontend.onrender.com)
+
+---
+
+## 1. Gönderi Oluşturma Sayfası
+- **API Endpoint:** `POST /posts`
+- **Görev:** Kullanıcının yeni gönderi oluşturması için Next.js tabanlı sayfa tasarımı, form validasyonu ve API entegrasyonu.
 - **UI Bileşenleri:**
-  - Responsive kayıt formu (desktop ve mobile uyumlu)
-  - Email input alanı (type="email", autocomplete="email")
-  - Şifre input alanı (type="password", şifre gücü göstergesi)
-  - Şifre tekrar input alanı (doğrulama için)
-  - Ad (firstName) input alanı (autocomplete="given-name")
-  - Soyad (lastName) input alanı (autocomplete="family-name")
-  - "Kayıt Ol" butonu (primary button style)
-  - "Zaten hesabınız var mı? Giriş Yap" linki
-  - Loading spinner (kayıt işlemi sırasında)
-  - Form container (card veya centered layout)
+  - Responsive & Glassmorphism Form Container: Tailwind CSS kullanılarak her cihaza uyumlu, backdrop-blur-md (cam efekti) ve shadow-2xl ile zenginleştirilmiş modern kart tasarımı.
+  - Başlık Alanı (Title Input): Kullanıcının gönderi başlığını girebileceği, odaklanıldığında çerçeve rengini anlık değiştiren (emerald-500) interaktif input alanı.
+  - İçerik Alanı (Content Textarea): Gönderi içeriği için geniş, yeniden boyutlandırılabilir textarea bileşeni; boş bırakıldığında anlık hata mesajı gösterilir.
+  - Kategori Seçimi: Kullanıcının gönderi kategorisini seçebileceği dropdown bileşeni.
+  - Akıllı Gönder Butonu: Tüm validasyon kuralları sağlanmadan aktifleşmeyen (disabled), tıklandığında gradient (from-emerald-600 to-teal-600) renkleriyle dikkat çeken ve işlem sırasında spinner animasyonu barındıran Primary Button.
+  - Tema Yönetimi (Theme Toggle): Sayfanın sağ üst köşesine entegre edilmiş, isDark state'ine bağlı olarak anlık Karanlık/Aydınlık mod geçişi sağlayan Sun/Moon butonu.
 - **Form Validasyonu:**
-  - HTML5 form validation (required, pattern attributes)
-  - JavaScript real-time validation
-  - Email format kontrolü (regex pattern)
-  - Şifre güvenlik kuralları (min 8 karakter, büyük/küçük harf, rakam)
-  - Şifre eşleşme kontrolü
-  - Ad ve soyad boş olamaz kontrolü
-  - Tüm alanlar geçerli olmadan buton disabled
-  - Client-side ve server-side validation
+  - Zorunlu Alan Kontrolü: Başlık ve içerik alanlarının boş bırakılması durumunda anlık hata mesajı gösterilir.
+  - Real-time Feedback: onChange ve onBlur event'leri dinlenerek, kullanıcı alanı terk ettiğinde boş bırakılan yerler için anında hata fırlatılır.
+  - Tüm alanlar geçerli olmadan buton disabled kalır.
 - **Kullanıcı Deneyimi:**
-  - Form hatalarını input altında gösterilmesi (inline validation)
-  - Başarılı kayıt sonrası success notification ve otomatik giriş sayfasına yönlendirme
-  - Hata durumlarında kullanıcı dostu mesajlar (409 Conflict: "Bu email zaten kullanılıyor")
-  - Form submission prevention (double-click koruması)
-  - Accessible form labels ve ARIA attributes
-  - Keyboard navigation desteği (Tab, Enter)
+  - Hata Animasyonları (Error Handling): Hatalı giriş yapıldığında veya API error döndürdüğünde özel animate-shake (form titreme) efekti devreye girer.
+  - Başarı Durumu Yönetimi: Gönderi başarıyla oluşturulduğunda kullanıcıya onay mesajı gösterilir ve gönderi listesine yönlendirilir.
+  - Görsel Zenginlik: Arka planda sabit (fixed), blur-3xl değerine sahip özel radial gradient animasyonları kullanılmıştır.
+  - Keyboard navigation desteği (Enter).
 - **Teknik Detaylar:**
-  - Framework: React/Vue/Angular veya Vanilla JS
-  - Form library: React Hook Form, Formik, veya native HTML5
-  - State management (form state, loading state, error state)
-  - Routing (kayıt sayfasından giriş sayfasına geçiş)
-  - SEO optimization (meta tags, structured data)
-  - Accessibility (WCAG 2.1 AA compliance)
+  - Framework: Next.js (App Router, Server & Client Components).
+  - State Management: useState ile form, yüklenme ve görsel durum yönetimi; Context API ile oturum ve kullanıcı verisi yönetimi.
+  - Styling: Tailwind CSS utility sınıfları ile responsive ve temaya duyarlı tasarım.
+  - Routing: Next.js yerleşik router ile sayfa yenilenmeden yönlendirme.
 
-## 2. Kullanıcı Profil Görüntüleme Sayfası
-- **API Endpoint:** `GET /users/{userId}`
-- **Görev:** Kullanıcı profil bilgilerini görüntüleme sayfası tasarımı ve implementasyonu
+---
+
+## 2. Gönderi Listeleme Sayfası
+- **API Endpoint:** `GET /posts`
+- **Görev:** Platforma ait tüm gönderilerin listelenmesi, filtrelenmesi ve kullanıcıya akıcı bir feed deneyimi sunulması.
 - **UI Bileşenleri:**
-  - Responsive profil layout (desktop: sidebar + content, mobile: stacked)
-  - Profil fotoğrafı alanı (circular avatar, placeholder veya gerçek fotoğraf)
-  - Kullanıcı adı ve soyadı (H1 heading)
-  - Email adresi (icon + text, copy to clipboard özelliği)
-  - Telefon numarası (icon + text, varsa)
-  - Hesap oluşturulma tarihi (formatted date)
-  - "Profili Düzenle" butonu (secondary button)
-  - "Hesabı Sil" butonu (danger button, alt kısımda)
-  - Refresh butonu veya auto-refresh
-  - Breadcrumb navigation (opsiyonel)
+  - Responsive Kart Izgarası: Masaüstünde çok kolonlu (grid), mobilde tek kolonlu akıcı kart yerleşimi. Her kart backdrop-blur-md ve shadow-xl ile glassmorphism estetiğine uygun tasarlanmıştır.
+  - Gönderi Kartı (Post Card): Başlık, içerik özeti, kategori rozeti, yazar bilgisi ve tarih bilgilerini barındıran modern kart bileşeni. hover:scale-[1.02] efektiyle etkileşim hissi verilir.
+  - Arama & Filtreleme Çubuğu: Kullanıcının gönderileri başlık veya kategoriye göre anlık filtreleyebildiği search input bileşeni.
+  - Yüklenme Durumu (Loading State): Veri çekilirken iskelet (skeleton) kartlar veya spinner animasyonu ile bekleme deneyimi sunulur.
+  - Boş Durum (Empty State): Hiç gönderi yoksa kullanıcıyı gönderi oluşturmaya yönlendiren bilgilendirme alanı.
+  - Tema Yönetimi (Theme Toggle): isDark state'ine bağlı anlık Karanlık/Aydınlık mod geçişi.
 - **Kullanıcı Deneyimi:**
-  - Loading skeleton screen (veri yüklenirken)
-  - Empty state (veri yoksa)
-  - Error state (yükleme hatası durumunda retry butonu)
-  - Smooth page transitions
-  - Profil fotoğrafı için placeholder avatar (initials)
-  - Responsive grid layout
-  - Print-friendly styles
+  - Smooth Page Transitions: animate-in fade-in duration-700 sınıfları ile sayfa içerikleri yumuşak opasite geçişiyle yüklenir.
+  - Görsel Zenginlik: Arka planda fixed konumlandırılmış, blur-3xl değerine sahip yeşil radial glow efekti.
+  - Kart tıklandığında gönderi detay sayfasına akıcı geçiş.
 - **Teknik Detaylar:**
-  - Lazy loading images (profil fotoğrafları için)
-  - Image optimization (WebP format, responsive images)
-  - Client-side caching (localStorage/sessionStorage)
-  - State management (user data, loading, error states)
-  - Routing (profil düzenleme sayfasına geçiş)
-  - Deep linking desteği (profil paylaşımı için)
-  - Meta tags (Open Graph, Twitter Cards)
+  - Framework: Next.js (App Router).
+  - Veri Çekme: useEffect ile sayfa yüklendiğinde API'dan gönderiler çekilir; Authorization: Bearer token interceptor ile otomatik eklenir.
+  - State Management: useState ile liste, yüklenme ve filtreleme durumu yönetilir.
+  - Styling: Tailwind CSS ile responsive grid ve kart tasarımı.
 
-## 3. Kullanıcı Profil Düzenleme Sayfası
-- **API Endpoint:** `PUT /users/{userId}`
-- **Görev:** Kullanıcı profil bilgilerini düzenleme sayfası tasarımı ve implementasyonu
+---
+
+## 3. Gönderi Güncelleme Sayfası
+- **API Endpoint:** `PUT /posts/{postId}`
+- **Görev:** Kullanıcının kendi gönderilerini güncelleyebileceği, mevcut verilerle önceden dolu gelen interaktif düzenleme sayfası.
 - **UI Bileşenleri:**
-  - Responsive düzenleme formu
-  - Profil fotoğrafı düzenleme alanı (drag & drop upload, preview)
-  - Ad (firstName) input alanı (mevcut değerle dolu)
-  - Soyad (lastName) input alanı (mevcut değerle dolu)
-  - Email input alanı (mevcut değerle dolu, düzenlenebilir)
-  - Telefon numarası input alanı (mevcut değerle dolu, format maskesi)
-  - "Kaydet" butonu (primary button, sağ üst veya form altında)
-  - "İptal" butonu (secondary button, sol üst veya form altında)
-  - Değişiklik yapıldığında "Kaydet" butonu aktif olur
-  - Unsaved changes indicator
+  - Ön Doldurmalı Form: Mevcut gönderi verileri (başlık, içerik, kategori) sayfa açılışında form alanlarına otomatik olarak yüklenir.
+  - Responsive Glassmorphism Form Container: backdrop-blur-md ve shadow-2xl ile zenginleştirilmiş modern kart tasarımı.
+  - Başlık & İçerik Alanları: Odaklanıldığında emerald-500 çerçeve rengi ile aktif geri bildirim sağlayan input ve textarea bileşenleri.
+  - Alt İşlem Çubuğu (Footer Actions):
+    - Kaydet Butonu: emerald-500 gradyanlı, işlem sırasında spinner animasyonu barındıran ana buton.
+    - İptal Butonu: Değişiklikleri kaydetmeden gönderi listesine geri döndüren ikincil buton.
+  - Tema Yönetimi (Theme Toggle): Anlık Karanlık/Aydınlık mod geçişi.
 - **Form Validasyonu:**
-  - Email format kontrolü (real-time)
-  - Telefon numarası format kontrolü (ülke kodu desteği, input masking)
-  - Real-time validation feedback
-  - Değişiklik yoksa "Kaydet" butonu disabled
-  - File upload validation (image type, size limits)
+  - Zorunlu Alan Kontrolü: Başlık ve içerik boş bırakılamaz; boş bırakıldığında anlık hata mesajı gösterilir.
+  - Controlled Input Management: Tüm değişiklikler setForm yapısıyla anlık olarak takip edilir.
+  - Değişiklik Algılama: Kullanıcı orijinal veriden farklı bir değer girmeden Kaydet butonu pasif kalır.
 - **Kullanıcı Deneyimi:**
-  - Optimistic update (kaydet butonuna basıldığında UI anında güncellenir)
-  - Başarılı güncelleme sonrası success notification (toast/snackbar)
-  - Hata durumunda error mesajı ve değişiklikler geri alınır
-  - "İptal" butonuna basıldığında değişiklik kaybı için browser confirmation dialog
-  - Beforeunload event (sayfa kapatılırken uyarı)
-  - Image preview (upload öncesi)
-  - Progress indicator (image upload için)
+  - Akıcı Geçiş Animasyonları: Form bileşeninin slide-in-from-bottom-4 ile aşağıdan yukarıya profesyonel girişi.
+  - Başarılı güncelleme sonrası kullanıcıya onay mesajı gösterilir ve gönderi listesine yönlendirilir.
+  - Hata durumlarında kullanıcı dostu mesajlar gösterilir.
 - **Teknik Detaylar:**
-  - Form state management (initial values, edited values, dirty state)
-  - File upload component (drag & drop, file picker)
-  - Image compression (client-side, before upload)
-  - Image preview functionality
-  - Routing (geri dönüş, kaydetme sonrası profil sayfasına dönüş)
-  - Unsaved changes warning (browser navigation)
-  - Form persistence (localStorage, draft saving)
+  - Framework: Next.js (Dynamic Routes: `/posts/[postId]/edit`).
+  - State Management: useState ile form verileri ve yüklenme durumu yönetilir.
+  - Veri Yükleme: Sayfa açılışında `GET /posts/{postId}` ile mevcut veri çekilip forma doldurulur.
+  - Interceptor Entegrasyonu: Güncelleme isteği JWT token ile otomatik olarak imzalanır.
+  - Styling: Tailwind CSS.
 
-## 4. Hesap Silme Akışı
-- **API Endpoint:** `DELETE /users/{userId}`
-- **Görev:** Kullanıcı hesabını silme işlemi için web UI akışı tasarımı ve implementasyonu
+---
+
+## 4. Gönderi Silme Akışı
+- **API Endpoint:** `DELETE /posts/{postId}`
+- **Görev:** Kullanıcının kendi gönderini güvenli bir şekilde silmesi için çift onaylı modal mekanizması ve silme protokolü sunmak.
 - **UI Bileşenleri:**
-  - "Hesabı Sil" butonu (profil sayfasında, danger button style)
-  - Modal dialog (destructive action için)
-  - Şifre doğrulama alanı (güvenlik için opsiyonel)
-  - Son onay ekranı (uyarı mesajları ile)
-  - "Emin misiniz?" confirmation dialog (çift onay mekanizması)
-  - Warning icons ve visual cues
+  - Kritik Eylem Butonu (Danger Trigger): Gönderi kartı veya detay sayfasında yer alan, kırmızı temalı (text-red-500) sil butonu.
+  - Onay Modalı (Confirmation Modal): fixed inset-0 ile tüm ekranı kaplayan, bg-black/70 ve backdrop-blur-sm efektiyle arka planı pasifize eden modal bileşeni.
+  - Uyarı Paneli: "Bu gönderiyi silmek istediğine emin misin?" başlığı ve "Bu işlem geri alınamaz" uyarısı bulunan yüksek kontrastlı bilgi kartı.
+  - Onay Butonları:
+    - Vazgeç (Cancel): İşlemi güvenli şekilde iptal eden ikincil buton.
+    - Sil (Confirm): bg-red-600 rengi ve shadow-red-600/20 dış ışığı ile işlemin ciddiyetini vurgulayan ana buton.
 - **Kullanıcı Deneyimi:**
-  - Destructive action için görsel uyarılar (kırmızı renk, warning icons)
-  - Açık ve net uyarı mesajları ("Bu işlem geri alınamaz")
-  - İptal seçeneği her zaman mevcut (modal close, cancel button)
-  - Silme işlemi sırasında loading indicator
-  - Başarılı silme sonrası logout ve login sayfasına yönlendirme
-  - Success message gösterilmesi
-- **Akış Adımları:**
-  1. Profil sayfasında "Hesabı Sil" butonuna tıklama
-  2. İlk uyarı modal dialog'u gösterilmesi
-  3. Onaylandığında şifre doğrulama (opsiyonel)
-  4. Son onay ekranı (detaylı uyarılar, checkbox confirmation)
-  5. Silme işlemi gerçekleştirme
-  6. Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  - Başlatma: Kullanıcı "Sil" butonuna tıklar, onay modalı ekranın merkezinde z-50 katmanında belirir.
+  - Çift Onay Mekanizması: "Vazgeç" ve "Sil" seçenekleri net hiyerarşiyle sunulur.
+  - Başarılı silme sonrası gönderi listesinden kaldırılır ve kullanıcıya bildirim gösterilir.
+  - Modal açıkken arka plan scroll engellenir.
 - **Teknik Detaylar:**
-  - Modal/Dialog component kullanımı
-  - Multi-step flow yönetimi (state machine veya step-based)
-  - Error handling (silme başarısız olursa)
-  - Logout işlemi entegrasyonu
-  - Session storage ve localStorage temizleme
-  - Redirect handling (login sayfasına dönüş)
-  - Browser history management
+  - Modal State Management: Boolean state ile modalin açılıp kapanması kontrol edilir.
+  - Asenkron API Entegrasyonu: DELETE isteği JWT token ile otomatik olarak imzalanır.
+  - Optimistic UI: Silme isteği gönderildiğinde gönderi listeden anlık kaldırılır; hata durumunda geri eklenir.
+  - Error Handling: Ağ veya sunucu hataları catch blokları ile yakalanarak kullanıcıya bildirim yapılır.
+  - Styling: Tailwind CSS.
+
+---
+
+## 5. Mesaj Gönderme Sayfası
+- **API Endpoint:** `POST /messages`
+- **Görev:** Kullanıcıların birbirine anlık mesaj gönderebildiği, sohbet arayüzüne entegre mesaj gönderme bileşeni.
+- **UI Bileşenleri:**
+  - Mesaj Giriş Alanı (Message Input): Alt kısımda sabit konumlandırılmış, geniş textarea veya input bileşeni. Enter tuşuyla gönderim desteği.
+  - Gönder Butonu: emerald-500 gradyanlı, mesaj alanı boşken disabled olan, gönderim sırasında spinner animasyonu barındıran buton.
+  - Mesaj Baloncukları (Message Bubbles): Gönderilen ve alınan mesajları görsel olarak ayıran, sağ/sol hizalamalı balonlar. Kendi mesajları emerald tonlarında, gelen mesajlar nötr renklerde gösterilir.
+  - Zaman Damgası: Her mesaj balonunun altında küçük font ile gönderim saati.
+  - Tema Yönetimi (Theme Toggle): isDark state'ine bağlı anlık Karanlık/Aydınlık mod geçişi.
+- **Form Validasyonu:**
+  - Boş Mesaj Engeli: Mesaj alanı boşken Gönder butonu disabled kalır, boşluk karakteri ile gönderim engellenir.
+  - Maksimum Karakter Sınırı: Belirlenen karakter sınırı aşıldığında kullanıcıya uyarı gösterilir.
+- **Kullanıcı Deneyimi:**
+  - Mesaj gönderildikten sonra input alanı otomatik temizlenir ve sohbet alanı en alta kaydırılır (auto-scroll).
+  - Gönderim sırasında mesaj optimistik olarak listeye eklenir; hata durumunda kaldırılır.
+  - Görsel Zenginlik: Glassmorphism kart yapısı ve blur-3xl radial gradient arka plan.
+- **Teknik Detaylar:**
+  - Framework: Next.js (App Router).
+  - State Management: useState ile mesaj içeriği ve yüklenme durumu yönetilir.
+  - Auto-scroll: useRef ile mesaj listesinin en altına otomatik kaydırma.
+  - Interceptor Entegrasyonu: POST isteği JWT token ile otomatik olarak imzalanır.
+  - Styling: Tailwind CSS.
+
+---
+
+## 6. Sohbet Listeleme Sayfası
+- **API Endpoint:** `GET /chats`
+- **Görev:** Kullanıcının tüm aktif sohbetlerini listeleyen, sohbete tıklandığında mesajlaşma ekranına yönlendiren sayfa.
+- **UI Bileşenleri:**
+  - Sohbet Listesi Kartları: Her sohbet için karşı kullanıcının adı, son mesaj önizlemesi ve zaman damgasını gösteren tıklanabilir liste öğeleri. hover:bg-emerald-500/10 efektiyle etkileşim hissi verilir.
+  - Avatar Alanı: Her sohbet kartında karşı kullanıcıya ait baş harf veya ikon tabanlı yuvarlak avatar bileşeni.
+  - Okunmamış Mesaj Rozeti: Okunmamış mesaj sayısını gösteren, emerald-500 arka planlı küçük sayı rozeti.
+  - Arama Çubuğu: Sohbetleri kullanıcı adına göre anlık filtreleme imkânı sunan search input.
+  - Yüklenme Durumu (Loading State): Veri çekilirken iskelet (skeleton) liste öğeleri gösterilir.
+  - Boş Durum (Empty State): Henüz sohbet yoksa "Henüz sohbetin yok, birine mesaj at!" yönlendirme mesajı.
+  - Tema Yönetimi (Theme Toggle): isDark state'ine bağlı anlık Karanlık/Aydınlık mod geçişi.
+- **Kullanıcı Deneyimi:**
+  - Sohbet kartına tıklandığında ilgili mesajlaşma sayfasına akıcı geçiş.
+  - Smooth Page Transitions: animate-in fade-in duration-700 ile yumuşak yükleme.
+  - Görsel Zenginlik: Arka planda fixed, blur-3xl radial glow efekti.
+- **Teknik Detaylar:**
+  - Framework: Next.js (App Router).
+  - Veri Çekme: useEffect ile sayfa yüklendiğinde tüm sohbetler API'dan çekilir.
+  - State Management: useState ile sohbet listesi, yüklenme ve filtreleme durumu yönetilir.
+  - Routing: Next.js router ile sohbet detay sayfasına `/chats/[chatId]` yönlendirmesi.
+  - Interceptor Entegrasyonu: GET isteği JWT token ile otomatik olarak imzalanır.
+  - Styling: Tailwind CSS.
