@@ -1,41 +1,31 @@
 # Emine Türkoğlu'un Web Frontend Görevleri
-**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)
+**Front-end Test Videosu:** [Link buraya eklenecek](https://example.com)  
 
+**DOMAIN LİNKİ:**[TIKLAYINIZ](https://campify-frontend.onrender.com)
 ## 1. Ekip İlanı Oluşturma Sayfası
 - **API Endpoint:** `POST /teams`
 - **Görev:** Kullanıcıların yeni bir proje veya çalışma grubu için ekip ilanı oluşturabileceği arayüzün tasarımı ve implementasyonu.
 - **UI Bileşenleri:**
   - Responsive kayıt formu (desktop ve mobile uyumlu)
-  - Email input alanı (type="email", autocomplete="email")
-  - Şifre input alanı (type="password", şifre gücü göstergesi)
-  - Şifre tekrar input alanı (doğrulama için)
-  - Ad (firstName) input alanı (autocomplete="given-name")
-  - Soyad (lastName) input alanı (autocomplete="family-name")
-  - "Kayıt Ol" butonu (primary button style)
-  - "Zaten hesabınız var mı? Giriş Yap" linki
-  - Loading spinner (kayıt işlemi sırasında)
-  - Form container (card veya centered layout)
+  - Ekip Adı alanı (type="text", minimum 5 karakter zorunluluğu)
+  - Açıklama input alanı (type="text")
+  - Yetkinlik Seçici (Skill Tag Input)
+  - Kişi Limiti(type="number", maksimum 50 kişi)
+  - İlanı Yayınla Butonu (Primary button style, işlem sırasında loading state)
 - **Form Validasyonu:**
   - HTML5 form validation (required, pattern attributes)
-  - JavaScript real-time validation
-  - Email format kontrolü (regex pattern)
-  - Şifre güvenlik kuralları (min 8 karakter, büyük/küçük harf, rakam)
-  - Şifre eşleşme kontrolü
-  - Ad ve soyad boş olamaz kontrolü
-  - Tüm alanlar geçerli olmadan buton disabled
-  - Client-side ve server-side validation
+  - Real-time JS Validation
+  - Yetkinlik Kontrolü
+  - Buton Durumu (Tüm zorunlu alanlar geçerli değilse "Yayınla" butonu disabled olmalıdır)
 - **Kullanıcı Deneyimi:**
-  - Form hatalarını input altında gösterilmesi (inline validation)
-  - Başarılı kayıt sonrası success notification ve otomatik giriş sayfasına yönlendirme
-  - Hata durumlarında kullanıcı dostu mesajlar (409 Conflict: "Bu email zaten kullanılıyor")
-  - Form submission prevention (double-click koruması)
-  - Accessible form labels ve ARIA attributes
-  - Keyboard navigation desteği (Tab, Enter)
+  - Inline Validation
+  - Success Notification
+  - Double-Click Koruması
+  - Keyboard Navigation
 - **Teknik Detaylar:**
   - Framework: React/Vue/Angular veya Vanilla JS
   - Form library: React Hook Form, Formik, veya native HTML5
   - State management (form state, loading state, error state)
-  - Routing (kayıt sayfasından giriş sayfasına geçiş)
   - SEO optimization (meta tags, structured data)
   - Accessibility (WCAG 2.1 AA compliance)
 
@@ -43,77 +33,49 @@
 - **API Endpoint:** `GET /teams`
 - **Görev:** Sistemdeki tüm aktif ekip ilanlarının kullanıcıya kartlar halinde sunulması.
 - **UI Bileşenleri:**
-  - Responsive profil layout (desktop: sidebar + content, mobile: stacked)
-  - Profil fotoğrafı alanı (circular avatar, placeholder veya gerçek fotoğraf)
-  - Kullanıcı adı ve soyadı (H1 heading)
-  - Email adresi (icon + text, copy to clipboard özelliği)
-  - Telefon numarası (icon + text, varsa)
-  - Hesap oluşturulma tarihi (formatted date)
-  - "Profili Düzenle" butonu (secondary button)
-  - "Hesabı Sil" butonu (danger button, alt kısımda)
-  - Refresh butonu veya auto-refresh
-  - Breadcrumb navigation (opsiyonel)
+  -Team Card Layout
+  -Kategori Filtreleri
 - **Kullanıcı Deneyimi:**
-  - Loading skeleton screen (veri yüklenirken)
   - Empty state (veri yoksa)
   - Error state (yükleme hatası durumunda retry butonu)
-  - Smooth page transitions
-  - Profil fotoğrafı için placeholder avatar (initials)
+  - Smooth page transition 
   - Responsive grid layout
   - Print-friendly styles
-- **Teknik Detaylar:**
-  - Lazy loading images (profil fotoğrafları için)
-  - Image optimization (WebP format, responsive images)
-  - Client-side caching (localStorage/sessionStorage)
-  - State management (user data, loading, error states)
-  - Routing (profil düzenleme sayfasına geçiş)
-  - Deep linking desteği (profil paylaşımı için)
-  - Meta tags (Open Graph, Twitter Cards)
 
 ## 3. Ekip İlanı Güncelleme ve Düzenleme Sayfası
 - **API Endpoint:** `PUT /teams/{teamId}`
 - **Görev:** İlan sahibinin mevcut ilan bilgilerini revize edebileceği düzenleme arayüzü.
 - **UI Bileşenleri:**
   - Responsive düzenleme formu
-  - Profil fotoğrafı düzenleme alanı (drag & drop upload, preview)
-  - Ad (firstName) input alanı (mevcut değerle dolu)
-  - Soyad (lastName) input alanı (mevcut değerle dolu)
-  - Email input alanı (mevcut değerle dolu, düzenlenebilir)
-  - Telefon numarası input alanı (mevcut değerle dolu, format maskesi)
   - "Kaydet" butonu (primary button, sağ üst veya form altında)
   - "İptal" butonu (secondary button, sol üst veya form altında)
   - Değişiklik yapıldığında "Kaydet" butonu aktif olur
   - Unsaved changes indicator
+  - Pre-filled Form
 - **Form Validasyonu:**
-  - Email format kontrolü (real-time)
-  - Telefon numarası format kontrolü (ülke kodu desteği, input masking)
   - Real-time validation feedback
   - Değişiklik yoksa "Kaydet" butonu disabled
-  - File upload validation (image type, size limits)
 - **Kullanıcı Deneyimi:**
   - Optimistic update (kaydet butonuna basıldığında UI anında güncellenir)
   - Başarılı güncelleme sonrası success notification (toast/snackbar)
   - Hata durumunda error mesajı ve değişiklikler geri alınır
   - "İptal" butonuna basıldığında değişiklik kaybı için browser confirmation dialog
   - Beforeunload event (sayfa kapatılırken uyarı)
-  - Image preview (upload öncesi)
-  - Progress indicator (image upload için)
+ 
 - **Teknik Detaylar:**
   - Form state management (initial values, edited values, dirty state)
-  - File upload component (drag & drop, file picker)
-  - Image compression (client-side, before upload)
-  - Image preview functionality
-  - Routing (geri dönüş, kaydetme sonrası profil sayfasına dönüş)
+  - Routing (geri dönüş, kaydetme sonrası team sayfasına dönüş)
   - Unsaved changes warning (browser navigation)
   - Form persistence (localStorage, draft saving)
+  - BeforeUnload Event
+  - Ownership Check
 
 ## 4. Ekip İlanı Silme Akışı
 - **API Endpoint:** `DELETE /teams/{teamId}`
 - **Görev:** Kullanıcının artık ihtiyaç duymadığı ilanları sistemden kaldırma süreci.
 - **UI Bileşenleri:**
-  - "Hesabı Sil" butonu (profil sayfasında, danger button style)
+  - "Ekip Sil" butonu ( danger button style)
   - Modal dialog (destructive action için)
-  - Şifre doğrulama alanı (güvenlik için opsiyonel)
   - Son onay ekranı (uyarı mesajları ile)
   - "Emin misiniz?" confirmation dialog (çift onay mekanizması)
   - Warning icons ve visual cues
@@ -122,84 +84,58 @@
   - Açık ve net uyarı mesajları ("Bu işlem geri alınamaz")
   - İptal seçeneği her zaman mevcut (modal close, cancel button)
   - Silme işlemi sırasında loading indicator
-  - Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  - Başarılı silme sonrası yönlendirme
   - Success message gösterilmesi
 - **Akış Adımları:**
-  1. Profil sayfasında "Hesabı Sil" butonuna tıklama
+  1. Team sayfasında "Ekibi Sil" butonuna tıklama
   2. İlk uyarı modal dialog'u gösterilmesi
-  3. Onaylandığında şifre doğrulama (opsiyonel)
-  4. Son onay ekranı (detaylı uyarılar, checkbox confirmation)
-  5. Silme işlemi gerçekleştirme
-  6. Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  3. Son onay ekranı (detaylı uyarılar, checkbox confirmation)
+  4. Silme işlemi gerçekleştirme
+  5. Başarılı silme sonrası team sayfasına yönlendirme
 - **Teknik Detaylar:**
   - Modal/Dialog component kullanımı
   - Multi-step flow yönetimi (state machine veya step-based)
   - Error handling (silme başarısız olursa)
-  - Logout işlemi entegrasyonu
   - Session storage ve localStorage temizleme
-  - Redirect handling (login sayfasına dönüş)
+  - Redirect handling 
   - Browser history management
 ## 5. Ekibe Katılma ve Talep Gönderme
 - **API Endpoint:** `POST /teams/{teamId}/join`
 - **Görev:** Kullanıcıların kendilerine uygun bir ekibe dahil olma sürecinin yönetimi.
 - **UI Bileşenleri:**
-  - "Hesabı Sil" butonu (profil sayfasında, danger button style)
+  - "Katıl" butonu (İlan detay sayfasında belirgin aksiyon butonu)
   - Modal dialog (destructive action için)
-  - Şifre doğrulama alanı (güvenlik için opsiyonel)
-  - Son onay ekranı (uyarı mesajları ile)
-  - "Emin misiniz?" confirmation dialog (çift onay mekanizması)
-  - Warning icons ve visual cues
 - **Kullanıcı Deneyimi:**
-  - Destructive action için görsel uyarılar (kırmızı renk, warning icons)
-  - Açık ve net uyarı mesajları ("Bu işlem geri alınamaz")
   - İptal seçeneği her zaman mevcut (modal close, cancel button)
-  - Silme işlemi sırasında loading indicator
-  - Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  - Başarılı katılma sonrası team sayfasına yönlendirme
   - Success message gösterilmesi
 - **Akış Adımları:**
-  1. Profil sayfasında "Hesabı Sil" butonuna tıklama
-  2. İlk uyarı modal dialog'u gösterilmesi
-  3. Onaylandığında şifre doğrulama (opsiyonel)
-  4. Son onay ekranı (detaylı uyarılar, checkbox confirmation)
-  5. Silme işlemi gerçekleştirme
-  6. Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  1. Team sayfasında "Katıl" butonuna tıklama
+  2. Başarılı katılma sonrası taem sayfasına yönlendirme
 - **Teknik Detaylar:**
   - Modal/Dialog component kullanımı
-  - Multi-step flow yönetimi (state machine veya step-based)
-  - Error handling (silme başarısız olursa)
-  - Logout işlemi entegrasyonu
-  - Session storage ve localStorage temizleme
-  - Redirect handling (login sayfasına dönüş)
+  - Redirect handling (team sayfasına dönüş)
   - Browser history management
+  - Auth Guard
+  - Concurrency Handling
 ## 6. Ekipten Ayrılma Süreci
 - **API Endpoint:** `DELETE /teams/{teamId}/leave`
 - **Görev:** Kullanıcının mevcut üyeliğini sonlandırma işlemi.
 - **UI Bileşenleri:**
-  - "Hesabı Sil" butonu (profil sayfasında, danger button style)
+  - "Ayrıl" butonu (team sayfasında, danger button style)
   - Modal dialog (destructive action için)
-  - Şifre doğrulama alanı (güvenlik için opsiyonel)
-  - Son onay ekranı (uyarı mesajları ile)
-  - "Emin misiniz?" confirmation dialog (çift onay mekanizması)
-  - Warning icons ve visual cues
 - **Kullanıcı Deneyimi:**
   - Destructive action için görsel uyarılar (kırmızı renk, warning icons)
-  - Açık ve net uyarı mesajları ("Bu işlem geri alınamaz")
-  - İptal seçeneği her zaman mevcut (modal close, cancel button)
   - Silme işlemi sırasında loading indicator
-  - Başarılı silme sonrası logout ve login sayfasına yönlendirme
-  - Success message gösterilmesi
+  - Başarılı silme sonrası team sayfasına yönlendirme
 - **Akış Adımları:**
-  1. Profil sayfasında "Hesabı Sil" butonuna tıklama
-  2. İlk uyarı modal dialog'u gösterilmesi
-  3. Onaylandığında şifre doğrulama (opsiyonel)
-  4. Son onay ekranı (detaylı uyarılar, checkbox confirmation)
-  5. Silme işlemi gerçekleştirme
-  6. Başarılı silme sonrası logout ve login sayfasına yönlendirme
+  1. Profil sayfasında "Ayrıl" butonuna tıklama
+  2. Silme işlemi gerçekleştirme
+  3. Başarılı silme sonrası team sayfasına yönlendirme
 - **Teknik Detaylar:**
   - Modal/Dialog component kullanımı
   - Multi-step flow yönetimi (state machine veya step-based)
   - Error handling (silme başarısız olursa)
-  - Logout işlemi entegrasyonu
-  - Session storage ve localStorage temizleme
-  - Redirect handling (login sayfasına dönüş)
+  - Success Toast
+  - Redirect handling (team sayfasına dönüş)
   - Browser history management
