@@ -3,45 +3,52 @@
 **API Test Videosu:** https://youtu.be/mz4toZTekyo  
 
 **Domain Adresi:** https://campify-melisa.vercel.app/
-## 1. Üye Olma
-- **Endpoint:** `POST /auth/register`
-- **Request Body:** 
-  ```json
+## 1. Yorum Ekleme
+- **Endpoint:** `POST /posts/{postId}/comments`
+- **Path Parameters:** - `postId` (string, required) - Yorum yapılacak gönderinin ID'si
+- **Request Body:** ```json
   {
-    "email": "kullanici@example.com",
-    "password": "Guvenli123!",
-    "firstName": "Ahmet",
-    "lastName": "Yılmaz"
-  }
-  ```
-- **Response:** `201 Created` - Kullanıcı başarıyla oluşturuldu
-
-## 2. Kullanıcı Bilgilerini Görüntüleme
-- **Endpoint:** `GET /users/{userId}`
-- **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
-- **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK` - Kullanıcı bilgileri başarıyla getirildi
-
-## 3. Kullanıcı Bilgilerini Güncelleme
-- **Endpoint:** `PUT /users/{userId}`
-- **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
-- **Request Body:** 
-  ```json
-  {
-    "firstName": "Ahmet",
-    "lastName": "Yılmaz",
-    "email": "yeniemail@example.com",
-    "phone": "+905551234567"
+    "content": "Yorum metni buraya gelecek"
   }
   ```
 - **Authentication:** Bearer Token gerekli
-- **Response:** `200 OK` - Kullanıcı başarıyla güncellendi
+- **Response:** `201 Created` - Yorum başarıyla eklendi
 
-## 4. Kullanıcı Silme
-- **Endpoint:** `DELETE /users/{userId}`
-- **Path Parameters:** 
-  - `userId` (string, required) - Kullanıcı ID'si
-- **Authentication:** Bearer Token gerekli (Yönetici yetkisi veya kendi hesabını silme yetkisi)
-- **Response:** `204 No Content` - Kullanıcı başarıyla silindi
+## 2. Yorum Listeleme
+- **Endpoint:** `GET /posts/{postId}/comments`
+- **Path Parameters:** - `postId` (string, required) - Yorumları listelenecek gönderinin ID'si
+- **Authentication:** Bearer Token gerekli
+- **Response:** `200 OK` - Yorumlar başarıyla getirildi
+
+## 3. Yorum Güncelleme
+- **Endpoint:** `PUT /comments/{commentId}`
+- **Path Parameters:** - `commentId` (string, required) - Güncellenecek yorumun ID'si
+- **Request Body:** ```json
+  {
+    "content": "Güncellenmiş yorum metni"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli (Yalnızca yorumu yazan kullanıcı)
+- **Response:** `200 OK` - Yorum başarıyla güncellendi
+
+## 4. Yorum Silme
+- **Endpoint:** `DELETE /comments/{commentId}`
+- **Path Parameters:** - `commentId` (string, required) - Silinecek yorumun ID'si
+- **Authentication:** Bearer Token gerekli (Yalnızca yorumu yazan kullanıcı veya gönderi sahibi)
+- **Response:** `204 No Content` - Yorum başarıyla silindi
+
+## 5. Sohbet Oluşturma
+- **Endpoint:** `POST /chats`
+- **Request Body:** ```json
+  {
+    "participantId": "hedef_kullanici_id"
+  }
+  ```
+- **Authentication:** Bearer Token gerekli
+- **Response:** `201 Created` - Sohbet başarıyla oluşturuldu
+
+## 6. Mesaj Silme
+- **Endpoint:** `DELETE /messages/{messageId}`
+- **Path Parameters:** - `messageId` (string, required) - Silinecek mesajın ID'si
+- **Authentication:** Bearer Token gerekli (Yalnızca mesajı gönderen kullanıcı)
+- **Response:** `204 No Content` - Mesaj başarıyla silindi
