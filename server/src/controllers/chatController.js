@@ -1,42 +1,55 @@
-const chatService = require('../services/chatService');
+const Message = require('../models/Message');
+const Chat = require('../models/Chat'); // Chat modelimizi içeri aktardık
 
-// 1. Test için sohbet odası oluşturma
+// 1. Sohbet Kanalı Oluşturma (İçi şimdilik boş kalabilir)
 exports.createChat = async (req, res) => {
-  try {
-    const { receiverId } = req.body; 
-    const userId = req.user ? req.user.id : "60d0fe4f5311236168a109ca"; // Bizim sahte ID'miz
-    
-    // Eğer karşı tarafın ID'si girilmemişse test için rastgele bir ID uyduruyoruz
-    const targetId = receiverId || "60d0fe4f5311236168a109cb"; 
-    
-    const chat = await chatService.createChat([userId, targetId]);
-    res.status(201).json(chat);
-  } catch (error) {
-    res.status(400).json({ code: "BAD_REQUEST", message: error.message });
-  }
+  res.status(200).json({ success: true, message: "Sohbet oluşturma rotası çalışıyor." });
 };
 
-// 2. Kullanıcının sohbetlerini listeleme (Senin görevin)
+// 2. Sohbetleri Listeleme ( 2. GEREKSİNİM)
 exports.getChats = async (req, res) => {
   try {
-    const userId = req.user ? req.user.id : "60d0fe4f5311236168a109ca";
-    const chats = await chatService.getUserChats(userId);
-    res.status(200).json(chats);
+    // Güvenlik kilidi: Sistemde giriş yapmış biri yoksa sahte ID kullanıyoruz
+    const userId = req.user?.id || "609d201584c6883e08f25b66";
+
+    // Veritabanında "participants" dizisi içinde bizim userId'mizi barındıran tüm sohbetleri bul
+    const chats = await Chat.find({ participants: userId })
+      .populate('lastMessage') // Son mesajın sadece ID'sini değil, içeriğini de getir
+      .sort({ updatedAt: -1 }); // En yeni mesajlaşılan sohbet en üstte çıksın
+
+    res.status(200).json({
+      success: true,
+      count: chats.length,
+      message: "Sohbetler başarıyla listelendi",
+      data: chats
+    });
   } catch (error) {
-    res.status(400).json({ code: "BAD_REQUEST", message: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Sohbetler getirilirken bir hata oluştu: " + error.message
+    });
   }
 };
 
-// 3. Mesaj gönderme (Senin görevin)
+// 3. Mesaj Gönderme (1. GEREKSİNİM - BAŞARIYLA TAMAMLANDI)
 exports.sendMessage = async (req, res) => {
   try {
-    const { chatId } = req.params; // URL'den sohbet ID'sini alıyoruz
-    const { content } = req.body;  // Gövdeden mesaj metnini alıyoruz
-    const userId = req.user ? req.user.id : "60d0fe4f5311236168a109ca";
+    // chatRoutes'daki :chatId parametresini alıyoruz
+    const { chatId } = req.params;
+    const { content } = req.body;
 
-    const message = await chatService.sendMessage(chatId, userId, content);
-    res.status(201).json(message);
+    // Güvenlik kilidi: Test edebilmek için 24 karakterli sahte bir ObjectId veriyoruz
+    const senderId = req.user?.id || "609d201584c6883e08f25b66";
+
+    const newMessage = new Message({
+      chatId: chatId,
+      senderId: senderId,
+      content: content
+    });
+
+    await newMessage.save();
+    res.status(201).json({ success: true, message: "Mesaj başarıyla kaydedildi!", data: newMessage });
   } catch (error) {
-    res.status(400).json({ code: "VALIDATION_ERROR", message: error.message });
+    res.status(400).json({ success: false, code: "BAD_REQUEST", message: error.message });
   }
 };
