@@ -1,9 +1,28 @@
 const Message = require('../models/Message');
 const Chat = require('../models/Chat'); // Chat modelimizi içeri aktardık
 
-// 1. Sohbet Kanalı Oluşturma (İçi şimdilik boş kalabilir)
+// 1. Sohbet Kanalı Oluşturma (GERÇEK VERİTABANI BAĞLANTISI)
 exports.createChat = async (req, res) => {
-  res.status(200).json({ success: true, message: "Sohbet oluşturma rotası çalışıyor." });
+  try {
+    const { participants } = req.body;
+
+    // Eğer katılımcı gönderilmemişse uyarı ver
+    if (!participants || participants.length === 0) {
+      return res.status(400).json({ success: false, message: "Lütfen katılımcı (participants) ekleyin." });
+    }
+
+    // Yeni sohbet odasını oluştur ve kaydet
+    const newChat = new Chat({ participants: participants });
+    await newChat.save();
+
+    res.status(201).json({
+      success: true,
+      message: "Sohbet başarıyla oluşturuldu! 🎉",
+      data: newChat
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Hata oluştu: " + error.message });
+  }
 };
 
 // 2. Sohbetleri Listeleme ( 2. GEREKSİNİM)
