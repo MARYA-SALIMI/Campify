@@ -1,19 +1,18 @@
 import axios from 'axios';
 
-// 1. Senin API'n
+// 1. Ana API Bağlantın (Adres düzeltildi!)
 const api = axios.create({
-  baseURL: 'https://campify-api.onrender.com', 
+  baseURL: 'https://campify-api-l1vf.onrender.com',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// 2. Arkadaşının Gönderi API'si
-// src/services/api.js içinde postApi kısmını şöyle güncelle:
+// 2. Gönderi API'si (Eski kodların bozulmaması için aynı canlı adrese yönlendirildi)
 export const postApi = axios.create({
-  baseURL: 'https://campify-api-l1vf.onrender.com', // Sadece domain kalsın
+  baseURL: 'https://campify-api-l1vf.onrender.com',
   headers: { 'Content-Type': 'application/json' },
 });
 
-// Interceptor (Token ekleme işlemi ikisi için de ortak olsun)
+// Interceptor (Kullanıcı giriş yaptıysa token'ı otomatik ekler)
 const setupToken = (instance) => {
   instance.interceptors.request.use((config) => {
     const token = localStorage.getItem('token');
