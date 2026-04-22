@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useRouter } from 'expo-router';
 import {
     View,
     Text,
@@ -78,7 +79,8 @@ const MOCK_POSTS = [
     },
 ];
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = () => {
+    const router = useRouter();
     const [activeFilter, setActiveFilter] = useState('all');
     const [posts] = useState(MOCK_POSTS);
 
@@ -146,7 +148,7 @@ const HomeScreen = ({ navigation }) => {
             {/* ── Feed ── */}
             <PostList
                 posts={filteredPosts}
-                onPostPress={(post) => navigation.navigate('PostDetail', { post })}
+                onPostPress={(post) => router.push({ pathname: '/PostDetail', params: { id: post.id } })}
                 ListHeaderComponent={ListHeader}
             />
         </SafeAreaView>
