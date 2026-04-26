@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'expo-router';
 import {
     View,
@@ -8,10 +8,14 @@ import {
     TouchableOpacity,
     SafeAreaView,
     StatusBar,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import PostList from '../../components/posts/PostList';
 import EditPostModal from '../../components/posts/EditPostModal';
+
+const BASE_URL = 'https://campify-api-l1vf.onrender.com/api';
 
 const FILTERS = [
     { key: 'all', label: 'Tümü', color: '#10B981', bg: 'rgba(16,185,129,0.15)', icon: '◆' },
@@ -21,72 +25,50 @@ const FILTERS = [
     { key: 'lost', label: 'Kayıp Eşya', color: '#0EA5E9', bg: 'rgba(14,165,233,0.15)', icon: '💬' },
 ];
 
-const MOCK_POSTS = [
-    {
-        id: '1',
-        type: 'book',
-        title: 'raket sporları topluluğu',
-        content: 'etkinliğimize herkesi bekleriz',
-        author: { name: 'Kampüs', username: 'kampüs' },
-        commentCount: 0,
-        createdAt: new Date('2026-04-08T13:10:45').toISOString(),
-    },
-    {
-        id: '2',
-        type: 'book',
-        title: 'teknofest',
-        content: 'ekip arkadaşı arıyorum',
-        author: { name: 'Kampüs', username: 'kampüs' },
-        commentCount: 2,
-        createdAt: new Date('2026-04-08T13:10:17').toISOString(),
-    },
-    {
-        id: '3',
-        type: 'book',
-        title: 'kimlik kaybettim',
-        content: 'dogru ilan başlığında yayınlıyorum',
-        author: { name: 'Kampüs', username: 'kampüs' },
-        commentCount: 0,
-        createdAt: new Date('2026-04-08T13:09:49').toISOString(),
-    },
-    {
-        id: '4',
-        type: 'team',
-        title: 'TechBridge Hackathon Takımı',
-        content: 'ML ve React bilen arkadaşlar başvurabilir.',
-        author: { name: 'Selin Yıldız', username: 'seliny' },
-        commentCount: 11,
-        createdAt: new Date(Date.now() - 3600000).toISOString(),
-    },
-    {
-        id: '5',
-        type: 'announcement',
-        title: 'Google Yaz Stajı Başvuruları',
-        content: '3. ve 4. sınıf öğrencileri başvurabilir. Son tarih 10 Nisan.',
-        author: { name: 'İTÜ Kariyer', username: 'itu_kariyer' },
-        commentCount: 17,
-        createdAt: new Date(Date.now() - 7200000).toISOString(),
-    },
-    {
-        id: '6',
-        type: 'lost',
-        title: 'Kırmızı Stanley Termos',
-        content: 'Kütüphane 2. katta unuttu. Son görülen: Masa 14B.',
-        author: { name: 'Deniz Avcı', username: 'deniz_cs' },
-        commentCount: 8,
-        createdAt: new Date(Date.now() - 10800000).toISOString(),
-    },
-];
-
 // Oturum açmış kullanıcı — backend entegrasyonunda burası auth'tan gelecek
-const CURRENT_USER_ID = 'sinem_user_01';
+const CURRENT_USER_ID = '60d0fe4f5311236168a109ca';
 const CURRENT_USER = { name: 'Sinem', username: 'sinem' };
 
 const HomeScreen = () => {
     const router = useRouter();
     const [activeFilter, setActiveFilter] = useState('all');
-    const [posts, setPosts] = useState(MOCK_POSTS);
+    const [posts, setPosts] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
     const [modalVisible, setModalVisible] = useState(false);
+
+    // ── GET /posts: Sayfa açıldığında gönderileri çek ─────────────────────
+    const fetchPosts = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/posts`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [GET /posts]:', errData);
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+
+            const raw = Array.isArray(data) ? data : data.posts ?? [];
+
+            // Backend _id → id, tags[0] → type dönüşümü
+            const normalized = raw.map((p) => ({
+                ...p,
+                id: p._id ?? p.id,
+                type: p.tags?.[0] ?? 'announcement',
+            }));
+
+            setPosts(normalized);
+        } catch (error) {
+            console.error('Gönderiler çekilemedi:', error);
+            Alert.alert('Hata', 'Gönderiler yüklenirken bir sorun oluştu.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchPosts();
+    }, [fetchPosts]);
 
     const filteredPosts =
         activeFilter === 'all'
@@ -98,42 +80,113 @@ const HomeScreen = () => {
         setModalVisible(true);
     };
 
-    // ── GÖREV 1: Modal'dan gelen veriyi listeye ekle ──────────────────────
+    // ── GÖREV 1: Modal'dan gelen veriyi API'ye POST et, listeye ekle ──────
     const handlePostSubmit = async (postData) => {
-        // type önceliği: modal type > category > varsayılan 'announcement'
         const resolvedType = postData.type ?? postData.category ?? 'announcement';
 
-        const newPost = {
-            ...postData,
-            id: Date.now().toString(),          // Geçici anlık ID
-            type: resolvedType,
-            category: resolvedType,
-            author: {
-                name: CURRENT_USER.name,
-                username: CURRENT_USER.username,
-            },
-            authorId: CURRENT_USER_ID,           // Sahip kontrolü için
-            commentCount: 0,
-            createdAt: new Date().toISOString(),
+        // Backend'in beklediği tam payload — sadece 4 alan
+        const payload = {
+            title: postData.title,
+            content: postData.content || postData.description || postData.text || '',
+            userId: CURRENT_USER_ID,
+            tags: [resolvedType],
         };
 
-        setPosts((prev) => [newPost, ...prev]); // Listenin en üstüne ekle
-        setModalVisible(false);
+        // 🔍 DEBUG: Backend'e gönderilen veriyi kontrol et
+        console.log('GÖNDERİLEN VERİ:', payload);
 
-        // TODO: Backend'e gönderim buraya gelecek
-        console.log('Yeni gönderi payloadu:', newPost);
+        try {
+            const response = await fetch(`${BASE_URL}/posts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [POST /posts]:', errData);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const createdPost = await response.json();
+
+            // Backend _id → id, tags[0] → type dönüşümü
+            const newPost = {
+                ...createdPost,
+                id: createdPost._id ?? createdPost.id,
+                type: createdPost.tags?.[0] ?? resolvedType,
+                author: createdPost.author ?? {
+                    name: CURRENT_USER.name,
+                    username: CURRENT_USER.username,
+                },
+                commentCount: createdPost.commentCount ?? 0,
+            };
+
+            setPosts((prev) => [newPost, ...prev]);
+            setModalVisible(false);
+            console.log('Yeni gönderi oluşturuldu:', newPost);
+        } catch (error) {
+            console.error('Gönderi oluşturulamadı:', error);
+            Alert.alert('Hata', 'Gönderi paylaşılırken bir sorun oluştu.');
+        }
     };
 
-    // ── GÖREV 1: Güncelleme ──────────────────────────────────────────────
-    const handleUpdate = (updatedPost) => {
-        setPosts((prev) =>
-            prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
-        );
+    // ── GÖREV 1: Güncelleme — PUT /posts/:id ─────────────────────────────
+    const handleUpdate = async (updatedPost) => {
+        // 🔍 DEBUG: Backend'e gönderilen veriyi kontrol et
+        console.log('GÖNDERİLEN VERİ [PUT]:', updatedPost);
+
+        try {
+            const response = await fetch(`${BASE_URL}/posts/${updatedPost.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updatedPost),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [PUT /posts/:id]:', errData);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            const savedPost = await response.json();
+
+            // Backend _id → id, tags[0] → type dönüşümü
+            const normalized = {
+                ...savedPost,
+                id: savedPost._id ?? savedPost.id,
+                type: savedPost.tags?.[0] ?? updatedPost.type,
+            };
+
+            setPosts((prev) =>
+                prev.map((p) => (p.id === normalized.id ? { ...p, ...normalized } : p))
+            );
+            console.log('Gönderi güncellendi:', normalized);
+        } catch (error) {
+            console.error('Gönderi güncellenemedi:', error);
+            Alert.alert('Hata', 'Gönderi güncellenirken bir sorun oluştu.');
+        }
     };
 
-    // ── GÖREV 1: Silme ───────────────────────────────────────────────────
-    const handleDelete = (postId) => {
-        setPosts((prev) => prev.filter((p) => p.id !== postId));
+    // ── GÖREV 1: Silme — DELETE /posts/:id ───────────────────────────────
+    const handleDelete = async (postId) => {
+        try {
+            const response = await fetch(`${BASE_URL}/posts/${postId}`, {
+                method: 'DELETE',
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [DELETE /posts/:id]:', errData);
+                throw new Error(`HTTP ${response.status}`);
+            }
+
+            setPosts((prev) => prev.filter((p) => p.id !== postId));
+            console.log('Gönderi silindi:', postId);
+        } catch (error) {
+            console.error('Gönderi silinemedi:', error);
+            Alert.alert('Hata', 'Gönderi silinirken bir sorun oluştu.');
+        }
     };
 
     const ListHeader = (
@@ -186,18 +239,26 @@ const HomeScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            {/* ── Feed ── */}
-            <PostList
-                posts={filteredPosts}
-                onPostPress={(post) =>
-                    router.push({ pathname: '/PostDetail', params: { id: post.id } })
-                }
-                ListHeaderComponent={ListHeader}
-                // ── GÖREV 1: 3 nokta menüsü için gerekli prop'lar ──
-                currentUserId={CURRENT_USER_ID}
-                onDelete={handleDelete}
-                onUpdate={handleUpdate}
-            />
+            {/* ── Yükleniyor ── */}
+            {isLoading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#10B981" />
+                    <Text style={styles.loadingText}>Gönderiler yükleniyor...</Text>
+                </View>
+            ) : (
+                /* ── Feed ── */
+                <PostList
+                    posts={filteredPosts}
+                    onPostPress={(post) =>
+                        router.push({ pathname: '/PostDetail', params: { id: post.id } })
+                    }
+                    ListHeaderComponent={ListHeader}
+                    // ── GÖREV 1: 3 nokta menüsü için gerekli prop'lar ──
+                    currentUserId={CURRENT_USER_ID}
+                    onDelete={handleDelete}
+                    onUpdate={handleUpdate}
+                />
+            )}
 
             {/* ── Gönderi Düzenleme/Oluşturma Modalı ── */}
             <EditPostModal
@@ -284,6 +345,17 @@ const styles = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
         color: '#4B5563',
+    },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        fontSize: 14,
+        color: '#4B5563',
+        fontWeight: '500',
     },
 });
 
