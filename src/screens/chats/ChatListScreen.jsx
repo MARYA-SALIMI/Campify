@@ -8,9 +8,9 @@ import {
     StatusBar,
     SafeAreaView,
 } from 'react-native';
+import { useRouter } from 'expo-router';
 import { MessageSquarePlus, ChevronRight } from 'lucide-react-native';
 
-// --- Mock Data --- (DEĞİŞTİRİLMEDİ)
 const MOCK_CHATS = [
     {
         id: '1',
@@ -54,12 +54,35 @@ const formatTime = (dateString) => {
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
 };
 
-const ChatListScreen = ({ navigation }) => {
-    const [chats] = useState(MOCK_CHATS);
+const ChatListScreen = () => {
+    const router = useRouter();
+
+    // ── GÜNCELLEME: setChats eklenди ki tıklamada unreadCount sıfırlanabilsin ──
+    const [chats, setChats] = useState(MOCK_CHATS);
 
     // 🚪 MELİSA İÇİN KAPI: Sohbet oluşturma (DEĞİŞTİRİLMEDİ)
     const handleNewChat = () => {
         console.log('Melisa: Sohbet oluşturma modalı buraya bağlanacak');
+    };
+
+    // ── GÜNCELLEME: Tıklanan sohbetin unreadCount'u 0'a çekiliyor ───────────
+    const handleChatPress = (item) => {
+        // Odaya girmeden önce okunmamış sayısını sıfırla
+        setChats((prev) =>
+            prev.map((chat) =>
+                chat.id === item.id ? { ...chat, unreadCount: 0 } : chat
+            )
+        );
+
+        router.push({
+            pathname: '/chat/[id]',
+            params: {
+                id: item.id,
+                name: item.otherUser?.name ?? 'Sohbet',
+                // 🚪 MELİSA İÇİN KAPI: Gerekirse otherUserId de eklenebilir
+                // otherUserId: item.otherUser?.id,
+            },
+        });
     };
 
     const renderChat = ({ item }) => {
@@ -68,18 +91,11 @@ const ChatListScreen = ({ navigation }) => {
         return (
             <TouchableOpacity
                 style={styles.chatItem}
-                onPress={() =>
-                    navigation.navigate('ChatRoom', {
-                        chatId: item.id,
-                        chatName: item.otherUser?.name || 'Sohbet',
-                    })
-                }
+                onPress={() => handleChatPress(item)}
                 activeOpacity={0.75}
             >
-                {/* Okunmamış varsa sol şerit */}
                 {hasUnread && <View style={styles.unreadStrip} />}
 
-                {/* Avatar */}
                 <View style={styles.avatarWrapper}>
                     <View style={[styles.avatar, hasUnread && styles.avatarActive]}>
                         <Text style={[styles.avatarText, hasUnread && styles.avatarTextActive]}>
@@ -89,7 +105,6 @@ const ChatListScreen = ({ navigation }) => {
                     {item.isOnline && <View style={styles.onlineDot} />}
                 </View>
 
-                {/* Bilgiler */}
                 <View style={styles.chatContent}>
                     <View style={styles.chatTop}>
                         <Text style={[styles.chatName, hasUnread && styles.chatNameBold]}>
@@ -126,7 +141,6 @@ const ChatListScreen = ({ navigation }) => {
         <SafeAreaView style={styles.container}>
             <StatusBar barStyle="light-content" backgroundColor="#0D1117" />
 
-            {/* Header */}
             <View style={styles.header}>
                 <View>
                     <Text style={styles.headerTitle}>Mesajlar</Text>
@@ -155,10 +169,7 @@ const ChatListScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#0D1117',
-    },
+    container: { flex: 1, backgroundColor: '#0D1117' },
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -169,17 +180,8 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#21262D',
     },
-    headerTitle: {
-        color: '#F3F4F6',
-        fontSize: 22,
-        fontWeight: '800',
-        letterSpacing: -0.4,
-    },
-    headerSubtitle: {
-        color: '#4B5563',
-        fontSize: 12,
-        marginTop: 2,
-    },
+    headerTitle: { color: '#F3F4F6', fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
+    headerSubtitle: { color: '#4B5563', fontSize: 12, marginTop: 2 },
     newChatBtn: {
         padding: 10,
         borderRadius: 12,
@@ -187,11 +189,7 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         borderColor: 'rgba(249,115,22,0.3)',
     },
-    listContent: {
-        paddingVertical: 6,
-    },
-
-    // Sohbet satırı
+    listContent: { paddingVertical: 6 },
     chatItem: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -202,123 +200,49 @@ const styles = StyleSheet.create({
     },
     unreadStrip: {
         position: 'absolute',
-        left: 0,
-        top: 8,
-        bottom: 8,
+        left: 0, top: 8, bottom: 8,
         width: 3,
         borderRadius: 0,
         backgroundColor: '#F97316',
         borderTopRightRadius: 2,
         borderBottomRightRadius: 2,
     },
-
-    // Avatar
-    avatarWrapper: {
-        position: 'relative',
-    },
+    avatarWrapper: { position: 'relative' },
     avatar: {
-        width: 52,
-        height: 52,
-        borderRadius: 26,
+        width: 52, height: 52, borderRadius: 26,
         backgroundColor: '#161B22',
-        borderWidth: 2,
-        borderColor: '#21262D',
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderWidth: 2, borderColor: '#21262D',
+        alignItems: 'center', justifyContent: 'center',
     },
-    avatarActive: {
-        borderColor: '#F97316',
-        backgroundColor: 'rgba(249,115,22,0.08)',
-    },
-    avatarText: {
-        color: '#6B7280',
-        fontWeight: '700',
-        fontSize: 15,
-    },
-    avatarTextActive: {
-        color: '#F97316',
-    },
+    avatarActive: { borderColor: '#F97316', backgroundColor: 'rgba(249,115,22,0.08)' },
+    avatarText: { color: '#6B7280', fontWeight: '700', fontSize: 15 },
+    avatarTextActive: { color: '#F97316' },
     onlineDot: {
-        position: 'absolute',
-        bottom: 1,
-        right: 1,
-        width: 13,
-        height: 13,
-        borderRadius: 7,
+        position: 'absolute', bottom: 1, right: 1,
+        width: 13, height: 13, borderRadius: 7,
         backgroundColor: '#22C55E',
-        borderWidth: 2.5,
-        borderColor: '#0D1117',
+        borderWidth: 2.5, borderColor: '#0D1117',
     },
-
-    // İçerik
-    chatContent: {
-        flex: 1,
-        gap: 5,
-    },
-    chatTop: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    chatName: {
-        color: '#9CA3AF',
-        fontSize: 15,
-        fontWeight: '500',
-    },
-    chatNameBold: {
-        color: '#F3F4F6',
-        fontWeight: '700',
-    },
-    chatTime: {
-        color: '#374151',
-        fontSize: 11,
-    },
-    chatTimeOrange: {
-        color: '#F97316',
-        fontWeight: '600',
-    },
-    chatBottom: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-    },
-    lastMsg: {
-        color: '#4B5563',
-        fontSize: 13,
-        flex: 1,
-        marginRight: 8,
-    },
-    lastMsgBold: {
-        color: '#9CA3AF',
-        fontWeight: '500',
-    },
-
-    // Okunmamış badge — TURUNCU
+    chatContent: { flex: 1, gap: 5 },
+    chatTop: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+    chatName: { color: '#9CA3AF', fontSize: 15, fontWeight: '500' },
+    chatNameBold: { color: '#F3F4F6', fontWeight: '700' },
+    chatTime: { color: '#374151', fontSize: 11 },
+    chatTimeOrange: { color: '#F97316', fontWeight: '600' },
+    chatBottom: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
+    lastMsg: { color: '#4B5563', fontSize: 13, flex: 1, marginRight: 8 },
+    lastMsgBold: { color: '#9CA3AF', fontWeight: '500' },
     badge: {
         backgroundColor: '#F97316',
-        borderRadius: 10,
-        minWidth: 20,
-        height: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
+        borderRadius: 10, minWidth: 20, height: 20,
+        alignItems: 'center', justifyContent: 'center',
         paddingHorizontal: 5,
         shadowColor: '#F97316',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.5,
-        shadowRadius: 4,
-        elevation: 3,
+        shadowOpacity: 0.5, shadowRadius: 4, elevation: 3,
     },
-    badgeText: {
-        color: '#fff',
-        fontSize: 11,
-        fontWeight: '800',
-    },
-
-    separator: {
-        height: 1,
-        backgroundColor: '#161B22',
-        marginLeft: 80,
-    },
+    badgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
+    separator: { height: 1, backgroundColor: '#161B22', marginLeft: 80 },
 });
 
 export default ChatListScreen;

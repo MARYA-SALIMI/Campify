@@ -11,8 +11,8 @@ import {
 } from 'react-native';
 import { Plus } from 'lucide-react-native';
 import PostList from '../../components/posts/PostList';
+import EditPostModal from '../../components/posts/EditPostModal';
 
-// ── Filtreler — görseldeki sıra ve renkler birebir ─────────────────────────
 const FILTERS = [
     { key: 'all', label: 'Tümü', color: '#10B981', bg: 'rgba(16,185,129,0.15)', icon: '◆' },
     { key: 'book', label: 'Kitap İlanı', color: '#F59E0B', bg: 'rgba(245,158,11,0.15)', icon: '📚' },
@@ -21,7 +21,6 @@ const FILTERS = [
     { key: 'lost', label: 'Kayıp Eşya', color: '#0EA5E9', bg: 'rgba(14,165,233,0.15)', icon: '💬' },
 ];
 
-// ── Mock Data ────────────────────────────────────────────────────────────────
 const MOCK_POSTS = [
     {
         id: '1',
@@ -79,10 +78,15 @@ const MOCK_POSTS = [
     },
 ];
 
+// Oturum açmış kullanıcı — backend entegrasyonunda burası auth'tan gelecek
+const CURRENT_USER_ID = 'sinem_user_01';
+const CURRENT_USER = { name: 'Sinem', username: 'sinem' };
+
 const HomeScreen = () => {
     const router = useRouter();
     const [activeFilter, setActiveFilter] = useState('all');
-    const [posts] = useState(MOCK_POSTS);
+    const [posts, setPosts] = useState(MOCK_POSTS);
+    const [modalVisible, setModalVisible] = useState(false);
 
     const filteredPosts =
         activeFilter === 'all'
@@ -90,8 +94,46 @@ const HomeScreen = () => {
             : posts.filter((p) => p.type === activeFilter);
 
     // 🚪 MELİSA İÇİN KAPI: Gönderi oluşturma
-    const handleCreatePost = () => {
-        console.log('Melisa: Gönderi oluşturma sayfasına yönlendirme buraya bağlanacak');
+    const handleOpenCreate = () => {
+        setModalVisible(true);
+    };
+
+    // ── GÖREV 1: Modal'dan gelen veriyi listeye ekle ──────────────────────
+    const handlePostSubmit = async (postData) => {
+        // type önceliği: modal type > category > varsayılan 'announcement'
+        const resolvedType = postData.type ?? postData.category ?? 'announcement';
+
+        const newPost = {
+            ...postData,
+            id: Date.now().toString(),          // Geçici anlık ID
+            type: resolvedType,
+            category: resolvedType,
+            author: {
+                name: CURRENT_USER.name,
+                username: CURRENT_USER.username,
+            },
+            authorId: CURRENT_USER_ID,           // Sahip kontrolü için
+            commentCount: 0,
+            createdAt: new Date().toISOString(),
+        };
+
+        setPosts((prev) => [newPost, ...prev]); // Listenin en üstüne ekle
+        setModalVisible(false);
+
+        // TODO: Backend'e gönderim buraya gelecek
+        console.log('Yeni gönderi payloadu:', newPost);
+    };
+
+    // ── GÖREV 1: Güncelleme ──────────────────────────────────────────────
+    const handleUpdate = (updatedPost) => {
+        setPosts((prev) =>
+            prev.map((p) => (p.id === updatedPost.id ? { ...p, ...updatedPost } : p))
+        );
+    };
+
+    // ── GÖREV 1: Silme ───────────────────────────────────────────────────
+    const handleDelete = (postId) => {
+        setPosts((prev) => prev.filter((p) => p.id !== postId));
     };
 
     const ListHeader = (
@@ -134,10 +176,9 @@ const HomeScreen = () => {
                     <Text style={styles.logo}>Campify</Text>
                     <Text style={styles.logoSub}>Sana uygun gönderileri bul veya kendi gönderini paylaş</Text>
                 </View>
-                {/* Görseldeki yeşil "Gönderi Oluştur" butonu */}
                 <TouchableOpacity
                     style={styles.createBtn}
-                    onPress={handleCreatePost}
+                    onPress={handleOpenCreate}
                     activeOpacity={0.8}
                 >
                     <Plus size={16} color="#000" strokeWidth={3} />
@@ -148,8 +189,21 @@ const HomeScreen = () => {
             {/* ── Feed ── */}
             <PostList
                 posts={filteredPosts}
-                onPostPress={(post) => router.push({ pathname: '/PostDetail', params: { id: post.id } })}
+                onPostPress={(post) =>
+                    router.push({ pathname: '/PostDetail', params: { id: post.id } })
+                }
                 ListHeaderComponent={ListHeader}
+                // ── GÖREV 1: 3 nokta menüsü için gerekli prop'lar ──
+                currentUserId={CURRENT_USER_ID}
+                onDelete={handleDelete}
+                onUpdate={handleUpdate}
+            />
+
+            {/* ── Gönderi Düzenleme/Oluşturma Modalı ── */}
+            <EditPostModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                onSubmit={handlePostSubmit}
             />
         </SafeAreaView>
     );
@@ -160,8 +214,6 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#0D1117',
     },
-
-    // Header
     header: {
         flexDirection: 'row',
         alignItems: 'center',
@@ -172,11 +224,13 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#21262D',
         gap: 12,
+        zIndex: 10,
+        elevation: 10,
     },
     logo: {
         fontSize: 26,
         fontWeight: '800',
-        color: '#10B981',   // Orijinal yeşil — turuncu DEĞİL
+        color: '#10B981',
         letterSpacing: -0.8,
     },
     logoSub: {
@@ -202,8 +256,6 @@ const styles = StyleSheet.create({
         color: '#000',
         letterSpacing: -0.2,
     },
-
-    // Filtreler
     filterWrapper: {
         paddingVertical: 12,
         borderBottomWidth: 1,

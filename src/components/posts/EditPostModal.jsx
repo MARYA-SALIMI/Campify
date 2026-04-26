@@ -1,383 +1,323 @@
 import React, { useState, useEffect } from 'react';
 import {
+    Modal,
     View,
     Text,
-    StyleSheet,
-    Modal,
     TextInput,
     TouchableOpacity,
+    StyleSheet,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
-    ActivityIndicator,
-    TouchableWithoutFeedback,
+    Pressable,
 } from 'react-native';
-import { X, Send, Pencil, Plus, Tag } from 'lucide-react-native';
+import { X, BookOpen, Users, Megaphone, Search } from 'lucide-react-native';
 
-const EditPostModal = ({ visible, onClose, onSubmit, post }) => {
+/**
+ * Kategori id'leri backend ile BİREBİR eşleşiyor:
+ * 'book' | 'team' | 'announcement' | 'lost'
+ *
+ * PostCard'daki CATEGORY_META anahtarlarıyla aynı olmak zorunda —
+ * bu sayede kartlar asla yanlış renk/etiket göstermez.
+ */
+const CATEGORIES = [
+    {
+        id: 'book',
+        label: 'Kitap İlanı',
+        icon: BookOpen,
+        color: '#F59E0B',
+        bgActive: 'rgba(245,158,11,0.18)',
+        borderActive: '#F59E0B',
+    },
+    {
+        id: 'team',
+        label: 'Ekip Arama',
+        icon: Users,
+        color: '#A855F7',
+        bgActive: 'rgba(168,85,247,0.18)',
+        borderActive: '#A855F7',
+    },
+    {
+        id: 'announcement',
+        label: 'Duyuru',
+        icon: Megaphone,
+        color: '#F43F5E',
+        bgActive: 'rgba(244,63,94,0.18)',
+        borderActive: '#F43F5E',
+    },
+    {
+        id: 'lost',
+        label: 'Kayıp Eşya',
+        icon: Search,
+        color: '#0EA5E9',
+        bgActive: 'rgba(14,165,233,0.18)',
+        borderActive: '#0EA5E9',
+    },
+];
+
+/**
+ * EditPostModal — Gönderi oluşturma / düzenleme modalı
+ *
+ * Props:
+ * @param {boolean}  visible      — Görünürlük
+ * @param {function} onClose      — Kapat callback'i
+ * @param {function} onSubmit     — ({ category, title, content }) => void
+ * @param {object}   initialData  — Düzenleme: { category: 'book'|'team'|'announcement'|'lost', title, content }
+ *                                  Oluşturma modunda null/undefined geçilebilir
+ */
+export default function EditPostModal({ visible, onClose, onSubmit, initialData }) {
+    const [selectedCategory, setSelectedCategory] = useState('book');
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
-    const [tagInput, setTagInput] = useState('');
-    const [tags, setTags] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const isEditing = !!post;
 
     useEffect(() => {
-        if (visible) {
-            if (post) {
-                setTitle(post.title || '');
-                setContent(post.content || '');
-                setTags(post.tags || []);
-            } else {
-                setTitle('');
-                setContent('');
-                setTags([]);
-                setTagInput('');
-            }
-            setError('');
+        if (!visible) return;
+        if (initialData) {
+            // Bilinmeyen category gelirse 'book' varsayılanına düş
+            const safeCategory = CATEGORIES.find((c) => c.id === initialData.category)
+                ? initialData.category
+                : 'book';
+            setSelectedCategory(safeCategory);
+            setTitle(initialData.title || '');
+            setContent(initialData.content || '');
+        } else {
+            setSelectedCategory('book');
+            setTitle('');
+            setContent('');
         }
-    }, [visible, post]);
+    }, [visible, initialData]);
 
-    const addTag = () => {
-        const trimmed = tagInput.trim().replace('#', '');
-        if (trimmed && !tags.includes(trimmed)) {
-            setTags((prev) => [...prev, trimmed]);
-        }
-        setTagInput('');
-    };
+    const isFormValid = title.trim().length > 0 && content.trim().length > 0;
+    const isEditMode = !!initialData;
 
-    const removeTag = (tag) => {
-        setTags((prev) => prev.filter((t) => t !== tag));
-    };
-
-    const handleSubmit = async () => {
-        if (!content.trim()) {
-            setError('İçerik boş bırakılamaz.');
-            return;
-        }
-        setError('');
-        setLoading(true);
-        try {
-            await onSubmit({ title: title.trim(), content: content.trim(), tags });
-            onClose();
-        } catch (e) {
-            setError(e?.response?.data?.message || 'Bir hata oluştu. Lütfen tekrar deneyin.');
-        } finally {
-            setLoading(false);
-        }
+    const handleSubmit = () => {
+        if (!isFormValid) return;
+        onSubmit({ category: selectedCategory, title: title.trim(), content: content.trim() });
+        onClose();
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            onRequestClose={onClose}
-        >
-            <TouchableWithoutFeedback onPress={onClose}>
-                <View style={styles.backdrop} />
-            </TouchableWithoutFeedback>
+        <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+            <Pressable style={styles.backdrop} onPress={onClose}>
+                <KeyboardAvoidingView
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                    style={styles.kvView}
+                >
+                    <Pressable style={styles.container} onPress={(e) => e.stopPropagation()}>
+                        <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
 
-            <KeyboardAvoidingView
-                behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                style={styles.keyboardView}
-            >
-                <View style={styles.sheet}>
-                    {/* Handle bar */}
-                    <View style={styles.handleBar} />
-
-                    {/* Modal Header */}
-                    <View style={styles.modalHeader}>
-                        <View style={styles.headerLeft}>
-                            {isEditing ? (
-                                <Pencil size={18} color="#10B981" />
-                            ) : (
-                                <Plus size={18} color="#10B981" />
-                            )}
-                            <Text style={styles.modalTitle}>
-                                {isEditing ? 'Gönderiyi Düzenle' : 'Yeni Gönderi'}
-                            </Text>
-                        </View>
-                        <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-                            <X size={20} color="#9CA3AF" />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.divider} />
-
-                    <ScrollView
-                        style={styles.formScroll}
-                        showsVerticalScrollIndicator={false}
-                        keyboardShouldPersistTaps="handled"
-                    >
-                        {/* Title Input */}
-                        <Text style={styles.label}>Başlık (İsteğe Bağlı)</Text>
-                        <TextInput
-                            style={styles.input}
-                            placeholder="Gönderi başlığı..."
-                            placeholderTextColor="#6B7280"
-                            value={title}
-                            onChangeText={setTitle}
-                            maxLength={100}
-                        />
-
-                        {/* Content Input */}
-                        <Text style={styles.label}>
-                            İçerik <Text style={styles.required}>*</Text>
-                        </Text>
-                        <TextInput
-                            style={[styles.input, styles.contentInput]}
-                            placeholder="Ne düşünüyorsun?"
-                            placeholderTextColor="#6B7280"
-                            value={content}
-                            onChangeText={setContent}
-                            multiline
-                            textAlignVertical="top"
-                            maxLength={2000}
-                        />
-                        <Text style={styles.charCount}>{content.length}/2000</Text>
-
-                        {/* Tags */}
-                        <Text style={styles.label}>Etiketler</Text>
-                        <View style={styles.tagInputRow}>
-                            <View style={styles.tagIconWrapper}>
-                                <Tag size={14} color="#10B981" />
+                            {/* ── Başlık ── */}
+                            <View style={styles.header}>
+                                <Text style={styles.headerTitle}>
+                                    {isEditMode ? 'Gönderiyi Düzenle' : 'Yeni Gönderi'}
+                                </Text>
+                                <TouchableOpacity onPress={onClose} style={styles.closeBtn} hitSlop={8}>
+                                    <X size={18} color="#9CA3AF" strokeWidth={2} />
+                                </TouchableOpacity>
                             </View>
-                            <TextInput
-                                style={styles.tagInput}
-                                placeholder="Etiket ekle, Enter'a bas"
-                                placeholderTextColor="#6B7280"
-                                value={tagInput}
-                                onChangeText={setTagInput}
-                                onSubmitEditing={addTag}
-                                returnKeyType="done"
-                            />
-                            <TouchableOpacity onPress={addTag} style={styles.addTagBtn}>
-                                <Plus size={16} color="#10B981" />
-                            </TouchableOpacity>
-                        </View>
 
-                        {tags.length > 0 && (
-                            <View style={styles.tagsRow}>
-                                {tags.map((tag, idx) => (
-                                    <TouchableOpacity
-                                        key={idx}
-                                        style={styles.tag}
-                                        onPress={() => removeTag(tag)}
-                                        activeOpacity={0.7}
-                                    >
-                                        <Text style={styles.tagText}>#{tag}</Text>
-                                        <X size={10} color="#34D399" style={{ marginLeft: 4 }} />
-                                    </TouchableOpacity>
-                                ))}
+                            {/* ── Kategori ── */}
+                            <Text style={styles.label}>KATEGORİ</Text>
+                            <View style={styles.catGrid}>
+                                {CATEGORIES.map((cat) => {
+                                    const isSelected = selectedCategory === cat.id;
+                                    const Icon = cat.icon;
+                                    return (
+                                        <TouchableOpacity
+                                            key={cat.id}
+                                            style={[
+                                                styles.catBtn,
+                                                isSelected && { backgroundColor: cat.bgActive, borderColor: cat.borderActive },
+                                            ]}
+                                            onPress={() => setSelectedCategory(cat.id)}
+                                            activeOpacity={0.75}
+                                        >
+                                            <Icon size={16} color={isSelected ? cat.color : '#6B7280'} strokeWidth={2} />
+                                            <Text style={[styles.catLabel, isSelected && { color: cat.color }]}>
+                                                {cat.label}
+                                            </Text>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
-                        )}
 
-                        {/* Error */}
-                        {!!error && <Text style={styles.errorText}>{error}</Text>}
+                            {/* ── Başlık Alanı ── */}
+                            <Text style={styles.label}>BAŞLIK</Text>
+                            <View style={styles.inputBox}>
+                                <TextInput
+                                    style={styles.titleInput}
+                                    placeholder="Gönderi başlığı..."
+                                    placeholderTextColor="#4B5563"
+                                    value={title}
+                                    onChangeText={setTitle}
+                                    maxLength={120}
+                                    returnKeyType="next"
+                                />
+                            </View>
 
-                        {/* Submit Button */}
-                        <TouchableOpacity
-                            style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
-                            onPress={handleSubmit}
-                            disabled={loading}
-                            activeOpacity={0.8}
-                        >
-                            {loading ? (
-                                <ActivityIndicator color="#fff" size="small" />
-                            ) : (
-                                <>
-                                    <Send size={16} color="#fff" />
-                                    <Text style={styles.submitBtnText}>
-                                        {isEditing ? 'Güncelle' : 'Paylaş'}
-                                    </Text>
-                                </>
-                            )}
-                        </TouchableOpacity>
+                            {/* ── İçerik Alanı ── */}
+                            <Text style={styles.label}>İÇERİK</Text>
+                            <View style={styles.inputBox}>
+                                <TextInput
+                                    style={styles.contentInput}
+                                    placeholder="Ne paylaşmak istiyorsun?"
+                                    placeholderTextColor="#4B5563"
+                                    value={content}
+                                    onChangeText={setContent}
+                                    multiline
+                                    textAlignVertical="top"
+                                    maxLength={2000}
+                                />
+                            </View>
 
-                        <View style={{ height: 24 }} />
-                    </ScrollView>
-                </View>
-            </KeyboardAvoidingView>
+                            {/* ── Eylem Butonları ── */}
+                            <View style={styles.actions}>
+                                <TouchableOpacity onPress={onClose} activeOpacity={0.7} style={styles.cancelBtn}>
+                                    <Text style={styles.cancelText}>İptal</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity
+                                    onPress={handleSubmit}
+                                    activeOpacity={0.85}
+                                    disabled={!isFormValid}
+                                    style={[styles.submitBtn, !isFormValid && styles.submitDisabled]}
+                                >
+                                    <Text style={styles.submitText}>{isEditMode ? 'Kaydet' : 'Yayınla'}</Text>
+                                </TouchableOpacity>
+                            </View>
+
+                        </ScrollView>
+                    </Pressable>
+                </KeyboardAvoidingView>
+            </Pressable>
         </Modal>
     );
-};
+}
 
 const styles = StyleSheet.create({
     backdrop: {
         flex: 1,
-        backgroundColor: 'rgba(0,0,0,0.6)',
-    },
-    keyboardView: {
-        position: 'absolute',
-        bottom: 0,
-        left: 0,
-        right: 0,
-    },
-    sheet: {
-        backgroundColor: '#1F2937',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        paddingTop: 12,
-        paddingHorizontal: 20,
-        maxHeight: '90%',
-        borderTopWidth: 1,
-        borderColor: '#374151',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 12,
-        elevation: 20,
-    },
-    handleBar: {
-        width: 40,
-        height: 4,
-        backgroundColor: '#4B5563',
-        borderRadius: 2,
-        alignSelf: 'center',
-        marginBottom: 16,
-    },
-    modalHeader: {
-        flexDirection: 'row',
+        backgroundColor: 'rgba(0,0,0,0.72)',
+        justifyContent: 'center',
         alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: 12,
+        paddingHorizontal: 16,
     },
-    headerLeft: {
+    kvView: {
+        width: '100%',
+        maxWidth: 520,
+        justifyContent: 'center',
+    },
+    container: {
+        backgroundColor: '#161B22',
+        borderRadius: 16,
+        padding: 24,
+        width: '100%',
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 8 },
+        shadowOpacity: 0.45,
+        shadowRadius: 24,
+        elevation: 12,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    headerTitle: {
+        fontSize: 20,
+        fontWeight: '700',
+        color: '#F9FAFB',
+        letterSpacing: 0.2,
+    },
+    closeBtn: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#1F2937',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    label: {
+        fontSize: 11,
+        fontWeight: '600',
+        color: '#6B7280',
+        letterSpacing: 1.1,
+        marginBottom: 10,
+    },
+    catGrid: {
+        flexDirection: 'row',
+        flexWrap: 'wrap',
+        gap: 10,
+        marginBottom: 22,
+    },
+    catBtn: {
         flexDirection: 'row',
         alignItems: 'center',
         gap: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 10,
+        borderRadius: 10,
+        borderWidth: 1.5,
+        borderColor: '#2D3748',
+        backgroundColor: '#1F2937',
+        width: '47%',
     },
-    modalTitle: {
-        color: '#F3F4F6',
-        fontSize: 18,
-        fontWeight: '700',
+    catLabel: {
+        fontSize: 14,
+        fontWeight: '500',
+        color: '#6B7280',
     },
-    closeBtn: {
-        padding: 6,
-        borderRadius: 8,
-        backgroundColor: '#111827',
-    },
-    divider: {
-        height: 1,
-        backgroundColor: '#374151',
-        marginBottom: 16,
-    },
-    formScroll: {
-        flexGrow: 0,
-    },
-    label: {
-        color: '#9CA3AF',
-        fontSize: 12,
-        fontWeight: '600',
-        textTransform: 'uppercase',
-        letterSpacing: 0.8,
-        marginBottom: 6,
-    },
-    required: {
-        color: '#F87171',
-    },
-    input: {
-        backgroundColor: '#111827',
+    inputBox: {
+        backgroundColor: '#1F2937',
         borderRadius: 10,
         borderWidth: 1,
-        borderColor: '#374151',
-        color: '#F3F4F6',
+        borderColor: '#2D3748',
+        marginBottom: 18,
+        overflow: 'hidden',
+    },
+    titleInput: {
+        paddingHorizontal: 16,
+        paddingVertical: 13,
         fontSize: 15,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        marginBottom: 16,
+        color: '#F9FAFB',
     },
     contentInput: {
-        minHeight: 120,
-        maxHeight: 200,
-        paddingTop: 12,
-    },
-    charCount: {
-        color: '#6B7280',
-        fontSize: 11,
-        textAlign: 'right',
-        marginTop: -12,
-        marginBottom: 16,
-    },
-    tagInputRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#111827',
-        borderRadius: 10,
-        borderWidth: 1,
-        borderColor: '#374151',
-        paddingHorizontal: 12,
-        marginBottom: 10,
-    },
-    tagIconWrapper: {
-        marginRight: 6,
-    },
-    tagInput: {
-        flex: 1,
-        color: '#F3F4F6',
+        paddingHorizontal: 16,
+        paddingTop: 13,
+        paddingBottom: 13,
         fontSize: 15,
-        paddingVertical: 12,
+        color: '#F9FAFB',
+        minHeight: 130,
     },
-    addTagBtn: {
-        padding: 4,
-    },
-    tagsRow: {
+    actions: {
         flexDirection: 'row',
-        flexWrap: 'wrap',
-        gap: 6,
-        marginBottom: 16,
-    },
-    tag: {
-        flexDirection: 'row',
+        justifyContent: 'flex-end',
         alignItems: 'center',
-        backgroundColor: '#064E3B',
-        borderRadius: 20,
-        paddingHorizontal: 10,
-        paddingVertical: 4,
-        borderWidth: 1,
-        borderColor: '#10B981',
+        gap: 12,
+        marginTop: 4,
     },
-    tagText: {
-        color: '#34D399',
-        fontSize: 12,
+    cancelBtn: {
+        paddingHorizontal: 18,
+        paddingVertical: 11,
+    },
+    cancelText: {
+        fontSize: 15,
         fontWeight: '500',
-    },
-    errorText: {
-        color: '#F87171',
-        fontSize: 13,
-        backgroundColor: '#2D1515',
-        borderRadius: 8,
-        padding: 10,
-        marginBottom: 12,
-        borderWidth: 1,
-        borderColor: '#7F1D1D',
+        color: '#9CA3AF',
     },
     submitBtn: {
         backgroundColor: '#10B981',
-        borderRadius: 12,
-        paddingVertical: 14,
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 8,
-        marginTop: 4,
-        shadowColor: '#10B981',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 6,
+        paddingHorizontal: 24,
+        paddingVertical: 11,
+        borderRadius: 10,
     },
-    submitBtnDisabled: {
-        opacity: 0.6,
+    submitDisabled: {
+        backgroundColor: '#064E3B',
+        opacity: 0.55,
     },
-    submitBtnText: {
-        color: '#fff',
-        fontSize: 16,
+    submitText: {
+        fontSize: 15,
         fontWeight: '700',
+        color: '#fff',
     },
 });
-
-export default EditPostModal;
