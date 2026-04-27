@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import {
     View,
     Text,
@@ -10,23 +10,35 @@ import {
     Platform,
     SafeAreaView,
     StatusBar,
+    ActivityIndicator,
 } from 'react-native';
 import { useRouter, useLocalSearchParams, Stack } from 'expo-router';
 import { ArrowLeft, Send, MoreVertical } from 'lucide-react-native';
 
-// ── Mevcut kullanıcı — backend entegrasyonunda auth'tan gelecek ──────────────
-const CURRENT_USER_ID = 'sinem_user_01';
+const BASE_URL = 'https://campify-api-l1vf.onrender.com/api';
 
-// ── Mock mesajlar ────────────────────────────────────────────────────────────
-const MOCK_MESSAGES = [
-    { id: 'm1', content: 'Merhaba! Nasıl gidiyor?', senderId: 'other', createdAt: new Date(Date.now() - 3600000).toISOString() },
-    { id: 'm2', content: 'İyiyim, teşekkürler! Proje nasıl?', senderId: CURRENT_USER_ID, createdAt: new Date(Date.now() - 3500000).toISOString() },
-    { id: 'm3', content: 'Projeyi bugün bitirirsek harika olur!', senderId: 'other', createdAt: new Date(Date.now() - 300000).toISOString() },
-];
+// ── Mevcut kullanıcı — backend entegrasyonunda auth'tan gelecek ──────────────
+const CURRENT_USER_ID = '60d0fe4f5311236168a109ca';
 
 const formatMsgTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' });
+};
+
+// Backend mesaj nesnesi → UI'ın beklediği formata çevir
+const normalizeMessage = (raw) => {
+    if (!raw) return null;
+
+    // sender bir obje ({ _id, ... }) veya string ID olabilir
+    const senderId =
+        typeof raw.sender === 'object' ? raw.sender?._id ?? raw.sender?.id : raw.sender ?? raw.senderId;
+
+    return {
+        id: raw._id ?? raw.id ?? Date.now().toString(),
+        content: raw.content ?? '',
+        senderId: senderId ?? '',
+        createdAt: raw.createdAt ?? new Date().toISOString(),
+    };
 };
 
 // ── Bileşen ──────────────────────────────────────────────────────────────────
@@ -34,31 +46,103 @@ const ChatRoomScreen = () => {
     const router = useRouter();
     const { id, name } = useLocalSearchParams();
 
-    const [messages, setMessages] = useState(MOCK_MESSAGES);
+    const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
+    const [isLoading, setIsLoading] = useState(true);
     const flatListRef = useRef(null);
 
-    // ── Mesaj gönderme ───────────────────────────────────────────────────────
-    const handleSend = useCallback(() => {
+    // ── GET: Sayfa açıldığında mesajları çek ─────────────────────────────────
+    const fetchMessages = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/chats/${id}/messages`);
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [GET /chats/:id/messages]:', errData);
+                setMessages([]);
+                return; // Sessizce çık, UI çalışmaya devam etsin
+            }
+
+            const data = await response.json();
+
+            // { messages: [...] } veya { data: [...] } veya düz dizi
+            const raw = Array.isArray(data)
+                ? data
+                : data.messages ?? data.data ?? [];
+
+            setMessages(raw.map(normalizeMessage).filter(Boolean));
+            console.log('Mesajlar yüklendi:', raw.length, 'adet');
+        } catch (error) {
+            console.error('Mesajlar çekilemedi:', error);
+            setMessages([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [id]);
+
+    useEffect(() => {
+        fetchMessages();
+    }, [fetchMessages]);
+
+    // ── POST: Mesaj gönder (Optimistic UI) ──────────────────────────────────
+    const handleSend = useCallback(async () => {
         const trimmed = inputText.trim();
         if (!trimmed) return;
 
-        const newMsg = {
-            id: Date.now().toString(),
+        // 1️⃣ Optimistic: Mesajı anında ekrana bas
+        const tempMsg = {
+            id: `temp_${Date.now()}`,
             content: trimmed,
             senderId: CURRENT_USER_ID,
             createdAt: new Date().toISOString(),
         };
 
-        setMessages((prev) => [...prev, newMsg]);
+        setMessages((prev) => [...prev, tempMsg]);
         setInputText('');
 
         setTimeout(() => {
             flatListRef.current?.scrollToEnd({ animated: true });
         }, 100);
 
-        // TODO: Backend'e gönderim buraya gelecek (chatId: id)
-        console.log(`Mesaj gönderildi — sohbet: ${id}`, newMsg);
+        // 2️⃣ Arka planda backend'e POST at
+        try {
+            const response = await fetch(`${BASE_URL}/chats/${id}/messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ content: trimmed, senderId: CURRENT_USER_ID }),
+            });
+
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [POST /chats/:id/messages]:', errData);
+                // Hata durumunda temp mesajı geri al
+                setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+                return;
+            }
+
+            const saved = await response.json();
+
+            // ✅ Backend { success, message, data: {...} } formatında dönüyor
+            const savedMsg = normalizeMessage(saved.data);
+
+            if (!savedMsg) {
+                // data yoksa temp mesajı olduğu gibi bırak
+                console.warn('Backend data alanı boş döndü, temp mesaj korunuyor.');
+                return;
+            }
+
+            // 3️⃣ Temp mesajı gerçek backend yanıtıyla değiştir
+            setMessages((prev) =>
+                prev.map((m) => (m.id === tempMsg.id ? savedMsg : m))
+            );
+
+            console.log(`Mesaj gönderildi — sohbet: ${id}`, savedMsg);
+        } catch (error) {
+            console.error('Mesaj gönderilemedi:', error);
+            // Ağ hatasında temp mesajı geri al
+            setMessages((prev) => prev.filter((m) => m.id !== tempMsg.id));
+        }
     }, [inputText, id]);
 
     // ── Mesaj balonu ─────────────────────────────────────────────────────────
@@ -96,7 +180,6 @@ const ChatRoomScreen = () => {
                     <ArrowLeft size={22} color="#F3F4F6" />
                 </TouchableOpacity>
 
-                {/* headerAvatar ve MessageCircle ikonu kaldırıldı */}
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerName} numberOfLines={1}>
                         {name ?? 'Sohbet'}
@@ -120,17 +203,30 @@ const ChatRoomScreen = () => {
                 behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 keyboardVerticalOffset={Platform.OS === 'ios' ? 20 : 0}
             >
-                <FlatList
-                    ref={flatListRef}
-                    data={messages}
-                    keyExtractor={(item) => item.id}
-                    renderItem={renderMessage}
-                    contentContainerStyle={styles.messageList}
-                    showsVerticalScrollIndicator={false}
-                    onContentSizeChange={() =>
-                        flatListRef.current?.scrollToEnd({ animated: false })
-                    }
-                />
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="large" color="#10B981" />
+                        <Text style={styles.loadingText}>Mesajlar yükleniyor...</Text>
+                    </View>
+                ) : (
+                    <FlatList
+                        ref={flatListRef}
+                        data={messages}
+                        keyExtractor={(item) => item.id}
+                        renderItem={renderMessage}
+                        contentContainerStyle={styles.messageList}
+                        showsVerticalScrollIndicator={false}
+                        onContentSizeChange={() =>
+                            flatListRef.current?.scrollToEnd({ animated: false })
+                        }
+                        ListEmptyComponent={
+                            <View style={styles.emptyContainer}>
+                                <Text style={styles.emptyText}>Henüz mesaj yok.</Text>
+                                <Text style={styles.emptySubText}>İlk mesajı sen gönder! 👋</Text>
+                            </View>
+                        }
+                    />
+                )}
 
                 {/* ── Input alanı ── */}
                 <View style={styles.inputRow}>
@@ -210,7 +306,6 @@ const styles = StyleSheet.create({
     },
     msgRowRight: { justifyContent: 'flex-end' },
     msgRowLeft: { justifyContent: 'flex-start' },
-
     bubble: {
         maxWidth: '78%',
         borderRadius: 16,
@@ -278,6 +373,35 @@ const styles = StyleSheet.create({
         backgroundColor: '#161B22',
         borderWidth: 1,
         borderColor: '#21262D',
+    },
+
+    // Yükleniyor & Boş
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        fontSize: 14,
+        color: '#4B5563',
+        fontWeight: '500',
+    },
+    emptyContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingTop: 80,
+        gap: 6,
+    },
+    emptyText: {
+        color: '#4B5563',
+        fontSize: 15,
+        fontWeight: '600',
+    },
+    emptySubText: {
+        color: '#374151',
+        fontSize: 13,
     },
 });
 

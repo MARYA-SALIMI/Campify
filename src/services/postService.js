@@ -1,70 +1,54 @@
-// Gerçek backend'e bağlanana kadar api'yi devre dışı bırakıyoruz
-// import { api } from './api'; 
+const BASE_URL = 'https://campify-api-l1vf.onrender.com/api/posts';
 
-// Ekranda tasarımı görebilmek için oluşturduğumuz sahte (Mock) gönderiler
-const MOCK_POSTS = [
-  {
-    _id: '1',
-    title: 'Kampüste Bahar Şenliği',
-    content: 'Bu hafta sonu güney kampüste bahar şenliği var, kimler geliyor? Etkinlik takvimi çok dolu!',
-    author: { name: 'Ahmet Yılmaz', username: 'ahmety', avatar: 'A' },
-    category: 'Etkinlik',
-    createdAt: new Date().toISOString(),
-    likes: 12,
-    comments: 3
-  },
-  {
-    _id: '2',
-    title: 'Kütüphane Saatleri Güncellendi',
-    content: 'Vize haftası yaklaştığı için kütüphane bugünden itibaren 7/24 açık olacakmış, bilginize arkadaşlar.',
-    author: { name: 'Emine Çelik', username: 'eminec', avatar: 'E' },
-    category: 'Duyuru',
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // 1 gün önce
-    likes: 45,
-    comments: 8
-  },
-  {
-    _id: '3',
-    title: 'Kayıp Eşya: Mavi Defter',
-    content: 'Kafeteryada mavi kapaklı bir not defteri unuttum. İçinde tüm dönem notlarım var, bulan bana ulaşabilir mi?',
-    author: { name: 'Sinem Havan', username: 'sinemhvn', avatar: 'S' },
-    category: 'Kayıp/Buluntu',
-    createdAt: new Date(Date.now() - 172800000).toISOString(), // 2 gün önce
-    likes: 5,
-    comments: 1
-  }
-];
+// ── Yardımcı: Hata durumunda backend mesajını logla ──────────────────────────
+const handleError = async (response, label) => {
+  const errData = await response.json().catch(() => ({}));
+  console.error(`BACKEND HATASI [${label}]:`, errData);
+  throw new Error(`HTTP ${response.status}`);
+};
 
-// Gönderileri çekme (0.5 saniye gecikme ile gerçekçi bir yükleme efekti verir)
+// ── GET /posts ───────────────────────────────────────────────────────────────
 export const getAllPosts = async () => {
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve(MOCK_POSTS);
-    }, 500);
-  });
+  const response = await fetch(BASE_URL);
+  if (!response.ok) await handleError(response, 'GET /posts');
+  const data = await response.json();
+  return Array.isArray(data) ? data : data.posts ?? [];
 };
 
-// Diğer fonksiyonlar şimdilik sadece konsola yazı yazsın, çökmesin
+// ── GET /posts/:postId ───────────────────────────────────────────────────────
 export const getPostById = async (postId) => {
-  return MOCK_POSTS.find(p => p._id === postId);
+  const response = await fetch(`${BASE_URL}/${postId}`);
+  if (!response.ok) await handleError(response, `GET /posts/${postId}`);
+  return await response.json();
 };
 
+// ── POST /posts ──────────────────────────────────────────────────────────────
 export const createPost = async (postData) => {
-  console.log("Yeni gönderi eklendi (Mock):", postData);
-  return { ...postData, _id: Math.random().toString() };
+  const response = await fetch(BASE_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(postData),
+  });
+  if (!response.ok) await handleError(response, 'POST /posts');
+  return await response.json();
 };
 
+// ── PUT /posts/:postId ───────────────────────────────────────────────────────
 export const updatePost = async (postId, postData) => {
-  console.log("Gönderi güncellendi (Mock):", postId);
-  return { ...postData, _id: postId };
+  const response = await fetch(`${BASE_URL}/${postId}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(postData),
+  });
+  if (!response.ok) await handleError(response, `PUT /posts/${postId}`);
+  return await response.json();
 };
 
+// ── DELETE /posts/:postId ────────────────────────────────────────────────────
 export const deletePost = async (postId) => {
-  console.log("Gönderi silindi (Mock):", postId);
-  return { success: true };
-};
-
-export const likePost = async (postId) => {
-  console.log("Gönderi beğenildi (Mock):", postId);
+  const response = await fetch(`${BASE_URL}/${postId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) await handleError(response, `DELETE /posts/${postId}`);
   return { success: true };
 };

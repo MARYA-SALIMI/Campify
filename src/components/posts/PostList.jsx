@@ -8,9 +8,20 @@ const PostList = ({
     loading = false,
     onEndReached,
     ListHeaderComponent,
+    // ── YENİ: HomeScreen'den gelen sahiplik prop'ları ────────────────────────
+    currentUserId,
+    onDeletePost,
+    onUpdatePost,
 }) => {
     const renderItem = ({ item }) => (
-        <PostCard post={item} onPress={onPostPress} />
+        <PostCard
+            post={item}
+            onPress={onPostPress}
+            // ── PostCard'ın beklediği prop adlarına birebir eşleniyor ────────
+            currentUserId={currentUserId}
+            onDelete={onDeletePost}
+            onUpdate={onUpdatePost}
+        />
     );
 
     const renderEmpty = () => {

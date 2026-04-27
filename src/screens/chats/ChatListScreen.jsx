@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
     View,
     Text,
@@ -7,33 +7,14 @@ import {
     TouchableOpacity,
     StatusBar,
     SafeAreaView,
+    ActivityIndicator,
+    Alert,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { MessageSquarePlus, ChevronRight } from 'lucide-react-native';
 
-const MOCK_CHATS = [
-    {
-        id: '1',
-        otherUser: { id: 'u2', name: 'Melisa Demir', username: '@melisa' },
-        lastMessage: { content: 'Projeyi bugün bitirirsek harika olur!', createdAt: new Date(Date.now() - 5 * 60000).toISOString() },
-        unreadCount: 3,
-        isOnline: true,
-    },
-    {
-        id: '2',
-        otherUser: { id: 'u3', name: 'Ahmet Kaya', username: '@ahmet.k' },
-        lastMessage: { content: 'Ödev için kaynak paylaşır mısın?', createdAt: new Date(Date.now() - 3 * 3600000).toISOString() },
-        unreadCount: 0,
-        isOnline: false,
-    },
-    {
-        id: '3',
-        otherUser: { id: 'u4', name: 'Zeynep Arslan', username: '@zeynep' },
-        lastMessage: { content: 'Yarın kütüphanede görüşelim mi?', createdAt: new Date(Date.now() - 26 * 3600000).toISOString() },
-        unreadCount: 1,
-        isOnline: true,
-    },
-];
+const BASE_URL = 'https://campify-api-l1vf.onrender.com/api';
+const CURRENT_USER_ID = '60d0fe4f5311236168a109ca';
 
 const getInitials = (name) => {
     if (!name) return '?';
@@ -54,11 +35,59 @@ const formatTime = (dateString) => {
     return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' });
 };
 
+// Backend _id + participants → UI'ın beklediği formata çevir
+const normalizeChat = (raw) => {
+    const otherId = raw.participants?.find((id) => id !== CURRENT_USER_ID) ?? null;
+    const shortId = otherId ? otherId.slice(-4).toUpperCase() : '????';
+
+    return {
+        id: raw._id ?? raw.id,
+        otherUser: {
+            id: otherId,
+            name: `Kampüs Sakini`,
+            username: `@kullanici_${shortId}`,
+        },
+        lastMessage: {
+            content: raw.lastMessage?.content ?? 'Henüz mesaj yok',
+            createdAt: raw.updatedAt ?? raw.createdAt ?? null,
+        },
+        unreadCount: raw.unreadCount ?? 0,
+        isOnline: false, // İleride presence endpoint'i ile doldurulacak
+    };
+};
+
 const ChatListScreen = () => {
     const router = useRouter();
+    const [chats, setChats] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // ── GÜNCELLEME: setChats eklenди ki tıklamada unreadCount sıfırlanabilsin ──
-    const [chats, setChats] = useState(MOCK_CHATS);
+    // ── GET /chats: Sayfa açıldığında sohbetleri çek ─────────────────────
+    const fetchChats = useCallback(async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(`${BASE_URL}/chats`);
+            if (!response.ok) {
+                const errData = await response.json().catch(() => ({}));
+                console.error('BACKEND HATASI [GET /chats]:', errData);
+                throw new Error(`HTTP ${response.status}`);
+            }
+            const data = await response.json();
+
+            // { data: [...] } veya düz dizi formatını destekle
+            const raw = Array.isArray(data) ? data : data.data ?? [];
+            setChats(raw.map(normalizeChat));
+            console.log('Sohbetler yüklendi:', raw.length, 'adet');
+        } catch (error) {
+            console.error('Sohbetler çekilemedi:', error);
+            Alert.alert('Hata', 'Sohbetler yüklenirken bir sorun oluştu.');
+        } finally {
+            setIsLoading(false);
+        }
+    }, []);
+
+    useEffect(() => {
+        fetchChats();
+    }, [fetchChats]);
 
     // 🚪 MELİSA İÇİN KAPI: Sohbet oluşturma (DEĞİŞTİRİLMEDİ)
     const handleNewChat = () => {
@@ -67,7 +96,6 @@ const ChatListScreen = () => {
 
     // ── GÜNCELLEME: Tıklanan sohbetin unreadCount'u 0'a çekiliyor ───────────
     const handleChatPress = (item) => {
-        // Odaya girmeden önce okunmamış sayısını sıfırla
         setChats((prev) =>
             prev.map((chat) =>
                 chat.id === item.id ? { ...chat, unreadCount: 0 } : chat
@@ -144,7 +172,9 @@ const ChatListScreen = () => {
             <View style={styles.header}>
                 <View>
                     <Text style={styles.headerTitle}>Mesajlar</Text>
-                    <Text style={styles.headerSubtitle}>{chats.length} aktif sohbet</Text>
+                    <Text style={styles.headerSubtitle}>
+                        {isLoading ? 'Yükleniyor...' : `${chats.length} aktif sohbet`}
+                    </Text>
                 </View>
                 {/* 🚪 MELİSA İÇİN KAPI: Yeni sohbet butonu (DEĞİŞTİRİLMEDİ) */}
                 <TouchableOpacity
@@ -156,14 +186,21 @@ const ChatListScreen = () => {
                 </TouchableOpacity>
             </View>
 
-            <FlatList
-                data={chats}
-                keyExtractor={(item) => item.id}
-                renderItem={renderChat}
-                ItemSeparatorComponent={renderSeparator}
-                contentContainerStyle={styles.listContent}
-                showsVerticalScrollIndicator={false}
-            />
+            {isLoading ? (
+                <View style={styles.loadingContainer}>
+                    <ActivityIndicator size="large" color="#F97316" />
+                    <Text style={styles.loadingText}>Sohbetler yükleniyor...</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={chats}
+                    keyExtractor={(item) => item.id}
+                    renderItem={renderChat}
+                    ItemSeparatorComponent={renderSeparator}
+                    contentContainerStyle={styles.listContent}
+                    showsVerticalScrollIndicator={false}
+                />
+            )}
         </SafeAreaView>
     );
 };
@@ -243,6 +280,17 @@ const styles = StyleSheet.create({
     },
     badgeText: { color: '#fff', fontSize: 11, fontWeight: '800' },
     separator: { height: 1, backgroundColor: '#161B22', marginLeft: 80 },
+    loadingContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: 12,
+    },
+    loadingText: {
+        fontSize: 14,
+        color: '#4B5563',
+        fontWeight: '500',
+    },
 });
 
 export default ChatListScreen;
