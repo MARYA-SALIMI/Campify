@@ -1,9 +1,8 @@
 import { Ionicons } from "@expo/vector-icons"; // Düzenle ikonu için ekledik
-import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 // onEdit prop'unu ekledik (TeamsScreen'den geliyor)
-const TeamCard = ({ team, onEdit }) => {
+const TeamCard = ({ team, isOwner, isMember, onEdit, onLeave, onDelete }) => {
   // 1. Backend verilerini güvenli bir şekilde alıyoruz (Eğer veri yoksa varsayılan değerler atıyoruz)
   const baslik = team?.baslik || "İsimsiz Ekip";
   const aciklama = team?.aciklama || "Açıklama belirtilmemiş.";
@@ -33,7 +32,20 @@ const TeamCard = ({ team, onEdit }) => {
 
         <View style={styles.headerRight}>
           {/* Eğer onEdit fonksiyonu gönderildiyse (yani kullanıcı bu ilanın sahibiyse) Düzenle İkonu göster */}
-          {onEdit && (
+          {isOwner && onDelete && (
+            <TouchableOpacity
+              onPress={onDelete}
+              style={[
+                styles.editButton,
+                { borderColor: "rgba(239, 68, 68, 0.3)" },
+              ]}
+            >
+              <Ionicons name="trash-outline" size={20} color="#ef4444" />
+            </TouchableOpacity>
+          )}
+
+          {/* SAHİBİ İSE DÜZENLE BUTONU */}
+          {isOwner && onEdit && (
             <TouchableOpacity onPress={onEdit} style={styles.editButton}>
               <Ionicons name="create-outline" size={20} color="#856404" />
             </TouchableOpacity>
