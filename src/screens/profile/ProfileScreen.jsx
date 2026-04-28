@@ -1,403 +1,295 @@
-import React, { useState, useCallback } from 'react';
+import { Ionicons } from '@expo/vector-icons';
+import React, { useEffect, useState } from 'react';
 import {
-    View,
-    Text,
-    StyleSheet,
-    FlatList,
-    TouchableOpacity,
-    RefreshControl,
     ActivityIndicator,
-    StatusBar,
-    SafeAreaView,
+    Dimensions,
+    ScrollView, StyleSheet,
+    Text, TouchableOpacity, View
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
-import { Settings, Grid3x3, BookMarked, Star } from 'lucide-react-native';
-import PostCard from '../../components/posts/PostCard';
-import EditPostModal from '../../components/posts/EditPostModal';
-import { getAllPosts, updatePost, deletePost } from '../../services/postService';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import EditProfileModal from '../../components/profile/EditProfileModal';
+import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/authService';
+import * as postService from '../../services/postService';  // ← YENİ
 
-// Kurgusal mevcut kullanıcı — gerçekte AuthContext/AsyncStorage'dan gelir
-const MOCK_CURRENT_USER = {
-    id: 'current-user-id',
-    name: 'Sinem Yıldız',
-    username: '@sinem.yildiz',
-    department: 'Bilgisayar Mühendisliği',
-    year: '3. Sınıf',
-    bio: 'Kampüs hayatını seven, kod yazan, kahve içen biri ☕',
-    followersCount: 142,
-    followingCount: 89,
+const { width } = Dimensions.get('window');
+
+// ── Tarihi okunabilir formata çevirir ────────────────────────────────────────
+const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffMins < 60) return `${diffMins} dakika önce`;
+    if (diffHours < 24) return `${diffHours} saat önce`;
+    if (diffDays === 1) return 'Dün';
+    return date.toLocaleDateString('tr-TR', { day: 'numeric', month: 'long' });
 };
 
-const StatBox = ({ label, value }) => (
-    <View style={styles.statBox}>
-        <Text style={styles.statValue}>{value}</Text>
-        <Text style={styles.statLabel}>{label}</Text>
-    </View>
-);
-
 const ProfileScreen = () => {
-    const [posts, setPosts] = useState([]);
+    const { logout, user } = useAuth();
+    const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [refreshing, setRefreshing] = useState(false);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [editingPost, setEditingPost] = useState(null);
+    const [isModalVisible, setModalVisible] = useState(false);
+    const [activeTab, setActiveTab] = useState('posts');
+    const [userPosts, setUserPosts] = useState([]);          // ← YENİ
 
-    const fetchMyPosts = async () => {
+    useEffect(() => {
+        if (user?.uid || user?.id) fetchUserData();
+    }, [user]);
+
+    const fetchUserData = async () => {
         try {
-            const allPosts = await getAllPosts();
-            // Sadece mevcut kullanıcıya ait gönderileri filtrele
-            const myPosts = allPosts.filter(
-                (p) =>
-                    p.author?._id === MOCK_CURRENT_USER.id ||
-                    p.author?.id === MOCK_CURRENT_USER.id
-            );
-            setPosts(myPosts);
-        } catch (e) {
-            console.error('fetchMyPosts error:', e);
+            setLoading(true);
+            const userId = user.uid || user.id;
+
+            // Profil ve gönderileri paralel çek
+            const [data, allPosts] = await Promise.all([
+                authService.getProfile(userId),
+                postService.getAllPosts(),
+            ]);
+
+            setProfile(data);
+
+            // Sadece bu kullanıcıya ait gönderileri filtrele.
+            // Backend authorId düz string, author._id veya author.id olarak dönebilir.
+            const mine = allPosts.filter((post) => {
+                const authorId =
+                    post.authorId ??
+                    post.author?._id ??
+                    post.author?.id ??
+                    post.userId ??
+                    null;
+                return authorId === userId;
+            });
+
+            setUserPosts(mine);
+        } catch (error) {
+            console.error("Profil yüklenemedi:", error);
         } finally {
             setLoading(false);
-            setRefreshing(false);
         }
     };
 
-    useFocusEffect(
-        useCallback(() => {
-            setLoading(true);
-            fetchMyPosts();
-        }, [])
-    );
-
-    const onRefresh = () => {
-        setRefreshing(true);
-        fetchMyPosts();
-    };
-
-    const handleEdit = (post) => {
-        setEditingPost(post);
-        setModalVisible(true);
-    };
-
-    const handleModalClose = () => {
-        setModalVisible(false);
-        setEditingPost(null);
-    };
-
-    const handleSubmit = async (formData) => {
-        if (editingPost) {
-            const updated = await updatePost(editingPost._id || editingPost.id, formData);
-            setPosts((prev) =>
-                prev.map((p) =>
-                    (p._id || p.id) === (editingPost._id || editingPost.id) ? updated : p
-                )
-            );
-        }
-    };
-
-    const handleDelete = async (postId) => {
-        try {
-            await deletePost(postId);
-            setPosts((prev) => prev.filter((p) => (p._id || p.id) !== postId));
-        } catch (e) {
-            console.error('deletePost error:', e);
-        }
-    };
-
-    const ProfileHeader = () => (
-        <View style={styles.profileHeader}>
-            {/* Ayarlar butonu */}
-            <TouchableOpacity style={styles.settingsBtn} activeOpacity={0.7}>
-                <Settings size={20} color="#9CA3AF" />
-            </TouchableOpacity>
-
-            {/* Avatar */}
-            <View style={styles.avatarWrapper}>
-                <View style={styles.avatarRing}>
-                    <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>
-                            {MOCK_CURRENT_USER.name.split(' ').map((n) => n[0]).join('')}
-                        </Text>
-                    </View>
-                </View>
-                <View style={styles.verifiedBadge}>
-                    <Star size={10} color="#fff" fill="#fff" />
-                </View>
+    if (loading) {
+        return (
+            <View style={styles.loadingContainer}>
+                <ActivityIndicator size="large" color="#10b981" />
             </View>
-
-            {/* İsim & Kullanıcı adı */}
-            <Text style={styles.profileName}>{MOCK_CURRENT_USER.name}</Text>
-            <Text style={styles.profileUsername}>{MOCK_CURRENT_USER.username}</Text>
-
-            {/* Departman etiketi */}
-            <View style={styles.departmentTag}>
-                <Text style={styles.departmentText}>
-                    {MOCK_CURRENT_USER.department} · {MOCK_CURRENT_USER.year}
-                </Text>
-            </View>
-
-            {/* Bio */}
-            <Text style={styles.bio}>{MOCK_CURRENT_USER.bio}</Text>
-
-            {/* İstatistikler */}
-            <View style={styles.statsRow}>
-                <StatBox label="Gönderi" value={posts.length} />
-                <View style={styles.statDivider} />
-                <StatBox label="Takipçi" value={MOCK_CURRENT_USER.followersCount} />
-                <View style={styles.statDivider} />
-                <StatBox label="Takip" value={MOCK_CURRENT_USER.followingCount} />
-            </View>
-
-            {/* Gönderiler başlığı */}
-            <View style={styles.sectionHeader}>
-                <Grid3x3 size={15} color="#10B981" />
-                <Text style={styles.sectionTitle}>Gönderilerim</Text>
-                <BookMarked size={15} color="#6B7280" style={{ marginLeft: 'auto' }} />
-            </View>
-        </View>
-    );
-
-    const renderPost = ({ item }) => (
-        <PostCard
-            post={item}
-            currentUserId={MOCK_CURRENT_USER.id}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            isProfileView={true} // ✅ Profil görünümü aktif → Düzenle/Sil ikonları görünür
-        />
-    );
-
-    const renderEmpty = () => (
-        <View style={styles.emptyContainer}>
-            <Grid3x3 size={40} color="#374151" />
-            <Text style={styles.emptyTitle}>Henüz gönderin yok</Text>
-            <Text style={styles.emptySubtitle}>
-                Ana sayfadan ilk gönderini paylaşmaya başla!
-            </Text>
-        </View>
-    );
+        );
+    }
 
     return (
-        <SafeAreaView style={styles.container}>
-            <StatusBar barStyle="light-content" backgroundColor="#111827" />
+        <SafeAreaView style={styles.safeArea}>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 100 }}>
 
-            {loading ? (
-                <View style={styles.loadingContainer}>
-                    <ActivityIndicator size="large" color="#10B981" />
-                    <Text style={styles.loadingText}>Profil yükleniyor...</Text>
+                {/* --- PREMIUM HEADER (ÜST KISIM) --- */}
+                <View style={styles.headerWrapper}>
+                    <View style={styles.meshGradientCover}>
+                        <View style={[styles.gradientBlob, styles.blob1]} />
+                        <View style={[styles.gradientBlob, styles.blob2]} />
+                    </View>
+
+                    <View style={styles.profileMainInfo}>
+                        <View style={styles.avatarNeonRing}>
+                            <View style={styles.avatarSolid}>
+                                <Text style={styles.avatarInitialText}>
+                                    {profile?.ad?.[0]}{profile?.soyad?.[0]}
+                                </Text>
+                            </View>
+                        </View>
+                        <Text style={styles.titleName}>{`${profile?.ad} ${profile?.soyad}`}</Text>
+                        <View style={styles.statusBadge}>
+                            <Text style={styles.statusText}>{profile?.bolum || "ENGINEER"}</Text>
+                        </View>
+                    </View>
                 </View>
-            ) : (
-                <FlatList
-                    data={posts}
-                    keyExtractor={(item) => String(item._id || item.id)}
-                    renderItem={renderPost}
-                    ListHeaderComponent={<ProfileHeader />}
-                    ListEmptyComponent={renderEmpty}
-                    refreshControl={
-                        <RefreshControl
-                            refreshing={refreshing}
-                            onRefresh={onRefresh}
-                            tintColor="#10B981"
-                            colors={['#10B981']}
-                        />
-                    }
-                    contentContainerStyle={styles.listContent}
-                    showsVerticalScrollIndicator={false}
-                />
-            )}
 
-            <EditPostModal
-                visible={modalVisible}
-                onClose={handleModalClose}
-                onSubmit={handleSubmit}
-                post={editingPost}
-            />
+                {/* --- ACTIONS --- */}
+                <View style={styles.actionSection}>
+                    <TouchableOpacity style={styles.glassButton} onPress={() => setModalVisible(true)}>
+                        <Ionicons name="flash" size={18} color="#fff" />
+                        <Text style={styles.glassButtonText}>Profili Düzenle</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.logoutCircle} onPress={logout}>
+                        <Ionicons name="power-outline" size={20} color="#f43f5e" />
+                    </TouchableOpacity>
+                </View>
+
+                {/* --- PROFESYONEL TAB SELECTOR --- */}
+                <View style={styles.tabBar}>
+                    {['posts', 'about'].map((t) => (
+                        <TouchableOpacity key={t} onPress={() => setActiveTab(t)} style={styles.tabTrigger}>
+                            <Text style={[styles.tabLabel, activeTab === t && styles.tabLabelActive]}>
+                                {t === 'posts' ? 'Aktivite' : 'Yetenekler'}
+                            </Text>
+                            {activeTab === t && <View style={styles.activeIndicator} />}
+                        </TouchableOpacity>
+                    ))}
+                </View>
+
+                {/* --- PROFESYONEL ALT KISIM (CONTENT) --- */}
+                <View style={styles.contentContainer}>
+                    {activeTab === 'posts' ? (
+                        userPosts.length === 0 ? (
+                            <Text style={styles.empty}>Henüz gönderi yok.</Text>
+                        ) : (
+                            // ← dummyPosts.map → userPosts.map; gerçek alanlar bağlandı
+                            userPosts.map((post) => (
+                                <View key={post._id ?? post.id} style={styles.postCardModern}>
+                                    <View style={styles.postHeaderLine}>
+                                        <View style={styles.postInfo}>
+                                            <Text style={styles.postAuthorTitle}>{profile?.ad}</Text>
+                                            <Text style={styles.postTimestamp}>{formatDate(post.createdAt)}</Text>
+                                        </View>
+                                        <Ionicons name="ellipsis-horizontal" size={16} color="#334155" />
+                                    </View>
+                                    <Text style={styles.postContentMain}>{post.content}</Text>
+                                    <View style={styles.postActionArea}>
+                                        <View style={styles.likeBadge}>
+                                            <Ionicons name="heart" size={14} color="#10b981" />
+                                            <Text style={styles.likeCount}>{post.likes ?? post.likeCount ?? 0}</Text>
+                                        </View>
+                                        <TouchableOpacity>
+                                            <Ionicons name="share-outline" size={18} color="#475569" />
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+                            ))
+                        )
+                    ) : (
+                        <View style={styles.bentoContainer}>
+                            <BentoCard
+                                icon="terminal-outline"
+                                title="Teknik Stack"
+                                items={profile?.yetenekler}
+                                color="#10b981"
+                            />
+                            <BentoCard
+                                icon="extension-puzzle-outline"
+                                title="İlgi Alanları"
+                                items={profile?.ilgi_alanlari}
+                                color="#3b82f6"
+                            />
+                        </View>
+                    )}
+                </View>
+
+                <EditProfileModal
+                    visible={isModalVisible}
+                    onClose={() => setModalVisible(false)}
+                    currentUser={profile}
+                    onUpdateSuccess={(newData) => setProfile(newData)}
+                />
+            </ScrollView>
         </SafeAreaView>
     );
 };
 
+// Alt Kısım İçin Profesyonel Bileşen
+const BentoCard = ({ icon, title, items, color }) => (
+    <View style={styles.bentoCard}>
+        <View style={styles.bentoHeader}>
+            <View style={[styles.bentoIconInner, { backgroundColor: `${color}10` }]}>
+                <Ionicons name={icon} size={18} color={color} />
+            </View>
+            <Text style={styles.bentoTitle}>{title}</Text>
+        </View>
+        <View style={styles.bentoTagCloud}>
+            {items?.map((item, i) => (
+                <View key={i} style={styles.bentoTag}>
+                    <Text style={styles.bentoTagText}>{item}</Text>
+                </View>
+            )) || <Text style={styles.empty}>Henüz eklenmemiş.</Text>}
+        </View>
+    </View>
+);
+
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#111827',
+    safeArea: { flex: 1, backgroundColor: '#000' },
+    loadingContainer: { flex: 1, backgroundColor: '#000', justifyContent: 'center' },
+
+    // --- Header ---
+    headerWrapper: { height: 280, justifyContent: 'center', alignItems: 'center' },
+    meshGradientCover: { ...StyleSheet.absoluteFillObject, backgroundColor: '#000' },
+    gradientBlob: { position: 'absolute', width: 250, height: 250, borderRadius: 125, opacity: 0.12 },
+    blob1: { backgroundColor: '#10b981', top: -50, right: -50 },
+    blob2: { backgroundColor: '#6366f1', bottom: -50, left: -50 },
+
+    profileMainInfo: { alignItems: 'center' },
+    avatarNeonRing: {
+        width: 100, height: 100, borderRadius: 50, padding: 3,
+        borderWidth: 1, borderColor: '#10b981', justifyContent: 'center', alignItems: 'center',
     },
-    loadingContainer: {
-        flex: 1,
-        alignItems: 'center',
-        justifyContent: 'center',
-        gap: 12,
+    avatarSolid: {
+        width: '100%', height: '100%', borderRadius: 50, backgroundColor: '#0a0a0a',
+        justifyContent: 'center', alignItems: 'center',
     },
-    loadingText: {
-        color: '#9CA3AF',
-        fontSize: 14,
+    avatarInitialText: { fontSize: 36, fontWeight: '200', color: '#fff', letterSpacing: 2 },
+
+    titleName: { fontSize: 28, fontWeight: '700', color: '#fff', marginTop: 15 },
+    statusBadge: { marginTop: 8, paddingHorizontal: 10, paddingVertical: 3, borderWidth: 1, borderColor: '#1e293b', borderRadius: 6 },
+    statusText: { color: '#475569', fontSize: 9, fontWeight: '900', letterSpacing: 2 },
+
+    // --- Actions ---
+    actionSection: { flexDirection: 'row', paddingHorizontal: 25, gap: 12, marginTop: -20 },
+    glassButton: {
+        flex: 1, height: 50, borderRadius: 12, backgroundColor: '#10b981',
+        flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
     },
-    listContent: {
-        paddingBottom: 40,
+    glassButtonText: { color: '#fff', fontWeight: '700', marginLeft: 8, fontSize: 14 },
+    logoutCircle: {
+        width: 50, height: 50, borderRadius: 12, backgroundColor: '#0a0a0a',
+        borderWidth: 1, borderColor: '#1e293b', justifyContent: 'center', alignItems: 'center'
     },
 
-    // --- Profil Header ---
-    profileHeader: {
-        alignItems: 'center',
-        paddingHorizontal: 24,
-        paddingTop: 16,
-        paddingBottom: 8,
-        position: 'relative',
+    // --- Tabs ---
+    tabBar: { flexDirection: 'row', marginTop: 30, paddingHorizontal: 25, gap: 25 },
+    tabTrigger: { paddingBottom: 8 },
+    tabLabel: { color: '#475569', fontSize: 15, fontWeight: '600' },
+    tabLabelActive: { color: '#fff' },
+    activeIndicator: { height: 2, backgroundColor: '#10b981', marginTop: 4, width: '100%' },
+
+    // --- ALT KISIM: Profesyonel Kartlar (Postlar) ---
+    contentContainer: { padding: 20 },
+    postCardModern: {
+        backgroundColor: '#0a0a0a',
+        borderRadius: 20, padding: 20, marginBottom: 16,
+        borderWidth: 1, borderColor: '#161b22',
     },
-    settingsBtn: {
-        position: 'absolute',
-        top: 16,
-        right: 20,
-        padding: 8,
-        borderRadius: 10,
-        backgroundColor: '#1F2937',
-        borderWidth: 1,
-        borderColor: '#374151',
+    postHeaderLine: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 15 },
+    postAuthorTitle: { color: '#f8fafc', fontWeight: '700', fontSize: 14 },
+    postTimestamp: { color: '#475569', fontSize: 11, marginTop: 2 },
+    postContentMain: { color: '#94a3b8', lineHeight: 22, fontSize: 14, fontWeight: '400' },
+    postActionArea: {
+        flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+        marginTop: 20, borderTopWidth: 1, borderTopColor: '#161b22', paddingTop: 15
     },
-    avatarWrapper: {
-        position: 'relative',
-        marginBottom: 14,
-        marginTop: 8,
+    likeBadge: {
+        flexDirection: 'row', alignItems: 'center', backgroundColor: '#10b98110',
+        paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8
     },
-    avatarRing: {
-        width: 88,
-        height: 88,
-        borderRadius: 44,
-        borderWidth: 3,
-        borderColor: '#10B981',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: 3,
+    likeCount: { color: '#10b981', fontSize: 12, fontWeight: '700', marginLeft: 5 },
+
+    // --- ALT KISIM: Bento Grid (Yetenekler) ---
+    bentoContainer: { gap: 16 },
+    bentoCard: {
+        backgroundColor: '#0a0a0a', borderRadius: 20, padding: 20,
+        borderWidth: 1, borderColor: '#161b22',
     },
-    avatar: {
-        width: 76,
-        height: 76,
-        borderRadius: 38,
-        backgroundColor: '#064E3B',
-        alignItems: 'center',
-        justifyContent: 'center',
+    bentoHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: 15 },
+    bentoIconInner: { width: 36, height: 36, borderRadius: 10, justifyContent: 'center', alignItems: 'center' },
+    bentoTitle: { color: '#f8fafc', fontSize: 15, fontWeight: '700', marginLeft: 12 },
+    bentoTagCloud: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+    bentoTag: {
+        backgroundColor: '#000', paddingHorizontal: 12, paddingVertical: 6,
+        borderRadius: 8, borderWidth: 1, borderColor: '#1e293b'
     },
-    avatarText: {
-        color: '#34D399',
-        fontSize: 26,
-        fontWeight: '800',
-        letterSpacing: -1,
-    },
-    verifiedBadge: {
-        position: 'absolute',
-        bottom: 2,
-        right: 2,
-        width: 22,
-        height: 22,
-        borderRadius: 11,
-        backgroundColor: '#10B981',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 2,
-        borderColor: '#111827',
-    },
-    profileName: {
-        color: '#F3F4F6',
-        fontSize: 20,
-        fontWeight: '800',
-        letterSpacing: -0.4,
-    },
-    profileUsername: {
-        color: '#10B981',
-        fontSize: 13,
-        fontWeight: '500',
-        marginTop: 3,
-        marginBottom: 10,
-    },
-    departmentTag: {
-        backgroundColor: '#1F2937',
-        borderRadius: 20,
-        paddingHorizontal: 14,
-        paddingVertical: 5,
-        borderWidth: 1,
-        borderColor: '#374151',
-        marginBottom: 10,
-    },
-    departmentText: {
-        color: '#9CA3AF',
-        fontSize: 12,
-        fontWeight: '500',
-    },
-    bio: {
-        color: '#D1D5DB',
-        fontSize: 13,
-        lineHeight: 20,
-        textAlign: 'center',
-        marginBottom: 20,
-        maxWidth: '85%',
-    },
-    statsRow: {
-        flexDirection: 'row',
-        backgroundColor: '#1F2937',
-        borderRadius: 16,
-        borderWidth: 1,
-        borderColor: '#374151',
-        paddingVertical: 14,
-        paddingHorizontal: 20,
-        width: '100%',
-        marginBottom: 20,
-        alignItems: 'center',
-    },
-    statBox: {
-        flex: 1,
-        alignItems: 'center',
-        gap: 3,
-    },
-    statValue: {
-        color: '#F3F4F6',
-        fontSize: 20,
-        fontWeight: '800',
-        letterSpacing: -0.5,
-    },
-    statLabel: {
-        color: '#9CA3AF',
-        fontSize: 11,
-        fontWeight: '500',
-        textTransform: 'uppercase',
-        letterSpacing: 0.5,
-    },
-    statDivider: {
-        width: 1,
-        height: 32,
-        backgroundColor: '#374151',
-    },
-    sectionHeader: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        width: '100%',
-        paddingBottom: 12,
-        borderBottomWidth: 1,
-        borderBottomColor: '#374151',
-        gap: 7,
-    },
-    sectionTitle: {
-        color: '#F3F4F6',
-        fontSize: 13,
-        fontWeight: '700',
-        textTransform: 'uppercase',
-        letterSpacing: 0.8,
-    },
-    emptyContainer: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        paddingVertical: 60,
-        paddingHorizontal: 32,
-        gap: 10,
-    },
-    emptyTitle: {
-        color: '#6B7280',
-        fontSize: 15,
-        fontWeight: '600',
-        marginTop: 6,
-    },
-    emptySubtitle: {
-        color: '#4B5563',
-        fontSize: 13,
-        textAlign: 'center',
-        lineHeight: 20,
-    },
+    bentoTagText: { color: '#94a3b8', fontSize: 12, fontWeight: '500' },
+    empty: { color: '#334155', fontSize: 12, fontStyle: 'italic' }
 });
 
 export default ProfileScreen;
