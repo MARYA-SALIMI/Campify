@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -12,42 +12,37 @@ import {
   View,
 } from "react-native";
 
-import TeamService from "../../services/teamService";
-// Hazırladığımız bileşenleri import ediyoruz
 import CreateTeamModal from "../../components/teams/CreateTeamModal";
 import EditTeamModal from "../../components/teams/EditTeamModal";
 import TeamCard from "../../components/teams/TeamCard";
 import TeamDetailModal from "../../components/teams/TeamDetailModal";
+import { useAuth } from "../../context/AuthContext";
+import TeamService from "../../services/teamService";
 
 const TeamsScreen = () => {
-  // --- STATE YÖNETİMİ ---
+  const { user } = useAuth();
+
   const [activeFilter, setActiveFilter] = useState("Tümü");
   const [isCreateVisible, setCreateVisible] = useState(false);
   const [isEditVisible, setEditVisible] = useState(false);
   const [isDetailVisible, setDetailVisible] = useState(false);
   const [selectedTeam, setSelectedTeam] = useState(null);
 
-  // Backend Veri Stateleri
   const [teams, setTeams] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  // --- MOCK DATA (Backend bağlanana kadar) ---
 
   const filters = ["Tümü", "Açık", "Benim İlanlarım", "Katıldıklarım"];
 
-  // --- API İSTEĞİ (BACKEND BAĞLANTISI) ---
   const fetchTeams = useCallback(
     async (filterText = activeFilter) => {
-      // UI'daki Türkçe filtreleri Backend'in beklediği İngilizce filtrelere çeviriyoruz
       let backendFilter = "all";
       if (filterText === "Açık") backendFilter = "open";
       if (filterText === "Benim İlanlarım") backendFilter = "mine";
       if (filterText === "Katıldıklarım") backendFilter = "joined";
 
       try {
-        // TeamService.js'teki listTeams fonksiyonunu çağırıyoruz (sayfa 1, limit 20 olarak verdim)
         const data = await TeamService.listTeams(1, 20, backendFilter);
-        // Backend { teams, total, page... } dönüyor, biz teams dizisini alıyoruz
         setTeams(data.teams);
       } catch (error) {
         console.error("İlanlar yüklenirken hata:", error);
@@ -58,21 +53,18 @@ const TeamsScreen = () => {
       }
     },
     [activeFilter],
-  ); // <-- FARK BURADA: activeFilter'ı bağımlılık olarak ekledik
+  );
 
-  // Filtre değiştiğinde (veya sayfa ilk açıldığında) verileri getir
   useEffect(() => {
     setLoading(true);
     fetchTeams(activeFilter);
   }, [activeFilter, fetchTeams]);
 
-  // Ekranı yukarıdan çekip yenileme (Pull to Refresh)
   const onRefresh = () => {
     setRefreshing(true);
     fetchTeams();
   };
 
-  // --- FONKSİYONLAR ---
   const handleCardPress = (team) => {
     setSelectedTeam(team);
     setDetailVisible(true);
@@ -87,11 +79,54 @@ const TeamsScreen = () => {
     fetchTeams();
   };
 
+  const handleLeaveTeam = (team) => {
+    Alert.alert("Ekipten Ayrıl", "Emin misin?", [
+      { text: "İptal", style: "cancel" },
+      {
+        text: "Ayrıl",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await TeamService.leaveTeam(team._id);
+            fetchTeams();
+          } catch (_e) {
+            Alert.alert("Hata", "Ayrılırken bir sorun oluştu.");
+          }
+        },
+      },
+    ]);
+  };
+
+  const handleDeleteTeam = (team) => {
+    Alert.alert("İlanı Sil", "Bu ilan kalıcı olarak silinecek!", [
+      { text: "İptal", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await TeamService.deleteTeam(team._id);
+            fetchTeams();
+          } catch (_e) {
+            console.log(
+              "AYRILMA HATASI DETAYI:",
+              _e.response?.data || _e.message,
+            );
+
+            // Backend'den gelen özel bir hata mesajı varsa onu, yoksa varsayılan metni gösterelim
+            const backendMesaji =
+              _e.response?.data?.message || "Ayrılırken bir hata oluştu.";
+            Alert.alert("Hata", backendMesaji);
+          }
+        },
+      },
+    ]);
+  };
+
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="dark-content" />
 
-      {/* 1. HEADER SECTION */}
       <View style={styles.header}>
         <View>
           <Text style={styles.headerTitle}>Ekip İlanları</Text>
@@ -108,7 +143,6 @@ const TeamsScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* 2. FİLTRELEME TABS */}
       <View style={styles.filterContainer}>
         <FlatList
           data={filters}
@@ -121,7 +155,7 @@ const TeamsScreen = () => {
                 styles.filterTab,
                 activeFilter === item && styles.activeFilterTab,
               ]}
-              onPress={() => setActiveFilter(item)} // Tıklandığında useEffect tetiklenecek ve yeni veriler gelecek
+              onPress={() => setActiveFilter(item)}
             >
               <Text
                 style={[
@@ -136,9 +170,7 @@ const TeamsScreen = () => {
         />
       </View>
 
-      {/* 3. İLAN LİSTESİ */}
       {loading ? (
-        // Veri Yüklenirken Gösterilecek Ekran
         <View style={styles.center}>
           <ActivityIndicator size="large" color="#1E7A42" />
           <Text style={{ marginTop: 10, color: "#6C757D" }}>
@@ -147,35 +179,55 @@ const TeamsScreen = () => {
         </View>
       ) : (
         <FlatList
-          data={teams} // Artık mockData veya client filter kullanmıyoruz, doğrudan backend'den gelen liste
-          keyExtractor={(item) => item._id} // MongoDB'nin _id formatına uygun hale getirdik
+          data={teams}
+          keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           refreshing={refreshing}
-          onRefresh={onRefresh} // Yenileme özelliği aktif
-          renderItem={({ item }) => (
-            <TouchableOpacity
-              activeOpacity={0.8}
-              onPress={() => handleCardPress(item)}
-            >
-              <TeamCard
-                team={item}
-                // Backend'den olusturanId mi yoksa isOwner gibi bir boolean mı dönüyor buna dikkat etmelisin.
-                // Eğer isOwner dönmüyorsa, giriş yapan kullanıcının ID'si ile ilan sahibini kıyaslaman gerekebilir.
-                onEdit={() => handleEditPress(item)}
-              />
-            </TouchableOpacity>
-          )}
+          onRefresh={onRefresh}
+          renderItem={({ item }) => {
+            // ↓ user.id kullanıyoruz, _id yok!
+            const currentUserId = (user?.id || user?._id)?.toString();
+
+            // MERN Populate ihtimaline karşı güvenli ID çıkarıcı
+            const getSafeId = (val) => {
+              if (!val) return null;
+              if (typeof val === "object")
+                return (val._id || val.id)?.toString();
+              return val.toString();
+            };
+
+            const isOwner = getSafeId(item.olusturanId) === currentUserId;
+
+            const isMember = (item.uyeler || []).some((u) => {
+              return getSafeId(u) === currentUserId;
+            });
+
+            return (
+              <TouchableOpacity
+                activeOpacity={0.8}
+                onPress={() => handleCardPress(item)}
+              >
+                <TeamCard
+                  team={item}
+                  isOwner={isOwner}
+                  isMember={isMember}
+                  onEdit={() => handleEditPress(item)}
+                  onLeave={() => handleLeaveTeam(item)}
+                  onDelete={() => handleDeleteTeam(item)}
+                />
+              </TouchableOpacity>
+            );
+          }}
           ListEmptyComponent={
             <Text style={styles.emptyText}>Bu kategoride ilan bulunamadı.</Text>
           }
         />
       )}
 
-      {/* 4. MODAL'LAR */}
       <CreateTeamModal
         visible={isCreateVisible}
         onClose={() => setCreateVisible(false)}
-        onSuccess={handleDataRefresh} // İlan başarıyla açılırsa listeyi yeniler (Bunu modal içinde çağırman gerekecek)
+        onSuccess={handleDataRefresh}
       />
 
       <EditTeamModal
@@ -189,13 +241,14 @@ const TeamsScreen = () => {
         visible={isDetailVisible}
         onClose={() => setDetailVisible(false)}
         team={selectedTeam}
-        onSuccess={handleDataRefresh} // Ekipten ayrılma/katılma olunca yenilemek istersen
+        onSuccess={() => {
+          fetchTeams();
+        }}
       />
     </SafeAreaView>
   );
 };
 
-// ... Styles objen aynen kalıyor, sadece center sınıfını ekledim
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#020617" },
   header: {
@@ -204,10 +257,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 20,
-    backgroundColor: "#020617", // Beyazdan kurtulduk
+    backgroundColor: "#020617",
   },
   headerTitle: {
-    fontSize: 26, // Biraz daha büyütüp logotype havası verdik
+    fontSize: 26,
     fontWeight: "900",
     color: "#f8fafc",
     letterSpacing: -1,
@@ -220,10 +273,10 @@ const styles = StyleSheet.create({
   },
   createButton: {
     flexDirection: "row",
-    backgroundColor: "#10b981", // Emerald yeşili
+    backgroundColor: "#10b981",
     paddingHorizontal: 16,
     paddingVertical: 10,
-    borderRadius: 14, // Referansına uygun daha köşeli/yumuşak dengesi
+    borderRadius: 14,
     alignItems: "center",
     shadowColor: "#10b981",
     shadowOffset: { width: 0, height: 4 },
@@ -242,20 +295,20 @@ const styles = StyleSheet.create({
     paddingLeft: 24,
     backgroundColor: "#020617",
     borderBottomWidth: 1,
-    borderBottomColor: "rgba(255, 255, 255, 0.05)", // Çok ince bir ayraç
+    borderBottomColor: "rgba(255, 255, 255, 0.05)",
   },
   filterTab: {
     paddingHorizontal: 18,
     paddingVertical: 10,
     borderRadius: 12,
-    backgroundColor: "rgba(30, 41, 59, 0.5)", // Glassmorphism efekti
+    backgroundColor: "rgba(30, 41, 59, 0.5)",
     marginRight: 12,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.05)",
   },
   activeFilterTab: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)", // Şeffaf yeşil dolgu
-    borderColor: "rgba(16, 185, 129, 0.4)", // Yeşil kenarlık
+    backgroundColor: "rgba(16, 185, 129, 0.15)",
+    borderColor: "rgba(16, 185, 129, 0.4)",
   },
   filterText: {
     color: "#94a3b8",
@@ -273,7 +326,7 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     marginTop: 50,
-    color: "#475569", // Slate 500
+    color: "#475569",
     fontSize: 16,
     fontWeight: "500",
   },
