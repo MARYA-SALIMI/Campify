@@ -12,21 +12,6 @@ console.log(
   "AXIOS'UN GİTTİĞİ TAM ADRES:",
   process.env.EXPO_PUBLIC_EMINE_API_URL,
 );
-// (Opsiyonel) Eğer takımlar kısmında giriş yapmış kullanıcı (token) gerekiyorsa
-/*teamApi.interceptors.request.use(async (config) => {
-  try {
-    // AuthContext'in kaydettiği token'ı hafızadan çekiyoruz
-    const token = await AsyncStorage.getItem("userToken");
-
-    if (token) {
-      // Backend'in "Kim bu?" sorusuna cevabımızı Header'a ekliyoruz
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  } catch (error) {
-    console.log("Token okuma hatası:", error);
-  }
-  return config;
-});*/
 
 teamApi.interceptors.request.use(
   async (config) => {
@@ -134,7 +119,7 @@ const TeamService = {
    */
   leaveTeam: async (teamId) => {
     try {
-      const response = await teamApi.post(`/teams/${teamId}/leave`); // api yerine teamApi
+      const response = await teamApi.delete(`/teams/${teamId}/leave`); // api yerine teamApi
       return response.data;
     } catch (error) {
       throw error;
