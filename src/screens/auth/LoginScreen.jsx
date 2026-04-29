@@ -10,7 +10,11 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useAuth } from '../../context/AuthContext';
-import api from '../../services/api'; // Kendi api servisimiz
+import api from '../../services/api';
+
+// Firebase Gereksinimleri
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { auth } from '../../../firebaseConfig';
 
 import AuthButton from '../../components/auth/AuthButton';
 import AuthInput from '../../components/auth/AuthInput';
@@ -22,35 +26,60 @@ const LoginScreen = ({ navigation }) => {
   const { login } = useAuth();
 
   const handleLogin = async () => {
-    // Mühendislik kontrolü: Boş alan bırakma
     if (!email || !password) {
-      Alert.alert("Eksik Bilgi", "Lütfen email ve şifrenizi giriniz.");
+      Alert.alert("Eksik Bilgi", "Lütfen tüm alanları doldurun.");
       return;
     }
 
     setLoading(true);
     try {
-      // Firebase bitti, artık doğrudan Campify API'sine gidiyoruz
-      const response = await api.post('/v1/auth/login', {
+      // 1. ADIM: Firebase ile kimlik ve mail onayı kontrolü
+      const userCredential = await signInWithEmailAndPassword(auth, email.trim(), password);
+      const firebaseUser = userCredential.user;
+
+      // Güncel durumu Firebase sunucusundan çek (Onay linkine tıklandı mı?)
+      await firebaseUser.reload(); 
+      
+      // 2. ADIM: Mail onaylı değilse içeri girmeyi engelle
+      if (!firebaseUser.emailVerified) {
+        Alert.alert(
+          "E-posta Onayı Gerekli", 
+          "Lütfen e-postanıza gönderilen linke tıklayarak hesabınızı doğrulayın."
+        );
+        setLoading(false);
+        return; 
+      }
+
+      // 3. ADIM: Kendi Backend API'ne git
+      // Firebase UID kullanmıyoruz, sadece email ve şifre ile kendi DB'mizden giriş yapıyoruz
+      const response = await api.post('/v1/auth/login', { 
         email: email.trim().toLowerCase(),
-        password: password
+        password: password // Kendi backend'in şifreyi kontrol edip JWT token dönecek
       });
 
-      // Backend'in bize bir token ve user objesi dönmeli
       const { token, user } = response.data;
 
       if (token && user) {
-        // Context'e verileri kaydediyoruz (Artık middleware bu token'ı tanıyacak)
+        // 4. ADIM: Kendi backend'inden gelen token ve user objesiyle oturum aç
         await login(token, user);
       } else {
         throw new Error("Sunucudan eksik veri geldi.");
       }
 
     } catch (error) {
-      console.error("Giriş Hatası:", error);
+      console.log("Giriş Hatası:", error);
       
-      // Backend'den gelen spesifik hata mesajını göster, yoksa genel hata ver
-      const errorMsg = error.response?.data?.message || "E-posta veya şifre hatalı.";
+      let errorMsg = "E-posta veya şifre hatalı.";
+      
+      // Firebase hatalarını yakala
+      if (error.code === 'auth/user-not-found') errorMsg = "Kullanıcı bulunamadı.";
+      if (error.code === 'auth/wrong-password') errorMsg = "Şifre hatalı.";
+      
+      // Kendi Backend'inden gelen hata mesajını önceliklendir
+      if (error.response?.data?.message) {
+        errorMsg = error.response.data.message;
+      }
+      
       Alert.alert("Giriş Başarısız", errorMsg);
     } finally {
       setLoading(false);

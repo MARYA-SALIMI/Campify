@@ -8,7 +8,11 @@ export const authService = {
   },
   
   updateProfile: async (userData) => {
-    const response = await api.put('/v1/users', userData);
+    const response = await api.put('/v1/profile', userData);
+    return response.data;
+  },
+  deleteProfile: async () => {
+    const response = await api.delete('/v1/profile');
     return response.data;
   }
 };

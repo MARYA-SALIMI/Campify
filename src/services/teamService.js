@@ -38,7 +38,6 @@ teamApi.interceptors.request.use(async (config) => {
   return config;
 });*/
 
-
 const TeamService = {
   /**
    * Ekipleri Listele
@@ -125,7 +124,7 @@ const TeamService = {
    */
   leaveTeam: async (teamId) => {
     try {
-      const response = await teamApi.post(`/teams/${teamId}/leave`); // api yerine teamApi
+      const response = await teamApi.delete(`/teams/${teamId}/leave`); // api yerine teamApi
       return response.data;
     } catch (error) {
       throw error;
