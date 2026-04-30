@@ -1,13 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
-// ✅ Marya'nın auth middleware'i — JWT'yi doğrulayıp req.user'ı doldurur
-const authMiddleware = require('../middleware/authMiddleware');
+
+// ✅ ÇÖZÜM: Süslü parantez eklendi. Marya'nın dışa aktarma yöntemiyle eşleştirildi.
+const { authMiddleware } = require('../middleware/authMiddleware');
 
 // API Uç Noktaları (Endpoints)
-router.post('/', authMiddleware, postController.createPost);  // ✅ Korumalı: token zorunlu
-router.get('/', postController.getPosts);                     // Herkese açık
-router.put('/:postId', postController.updatePost);            // Belirli bir gönderiyi güncelle
-router.delete('/:postId', postController.deletePost);         // Belirli bir gönderiyi sil
+router.post('/', authMiddleware, postController.createPost);    // ✅ Korumalı: Sadece giriş yapanlar gönderi atabilir
+router.get('/', postController.getPosts);                       // Herkese açık: Anasayfa akışı
+router.put('/:postId', authMiddleware, postController.updatePost);    // ✅ Korumalı: Sadece giriş yapanlar güncelleyebilir
+router.delete('/:postId', authMiddleware, postController.deletePost); // ✅ Korumalı: Sadece giriş yapanlar silebilir
 
 module.exports = router;
