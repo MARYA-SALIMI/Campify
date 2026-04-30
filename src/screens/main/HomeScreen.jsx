@@ -7,6 +7,7 @@ import {
 import { Plus } from 'lucide-react-native';
 import PostList from '../../components/posts/PostList';
 import EditPostModal from '../../components/posts/EditPostModal';
+import * as postService from '../../services/postService';
 
 const BASE_URL = 'https://campify-api-l1vf.onrender.com/api';
 
@@ -31,23 +32,21 @@ const HomeScreen = () => {
     const fetchPosts = useCallback(async () => {
         setIsLoading(true);
         try {
-            const response = await fetch(`${BASE_URL}/posts`);
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const data = await response.json();
-
-            const raw = Array.isArray(data) ? data : data.posts ?? [];
+            const raw = await postService.getAllPosts();
 
             const normalized = raw.map((p) => ({
                 ...p,
                 id: p._id ?? p.id,
                 type: p.tags?.[0] ?? 'announcement',
-                authorId: p.userId, // 🎯 3 NOKTA ÇÖZÜMÜ: Backend'den gelen userId'yi authorId'ye çevirdik
+                authorId: p.userId ?? p.author?._id, 
             }));
 
             setPosts(normalized);
         } catch (error) {
             console.error('Gönderiler çekilemedi:', error);
-            Alert.alert('Hata', 'Gönderiler yüklenirken bir sorun oluştu.');
+            if (error.response?.status !== 401) {
+                Alert.alert('Hata', 'Gönderiler yüklenirken bir sorun oluştu.');
+            }
         } finally {
             setIsLoading(false);
         }
@@ -71,25 +70,17 @@ const HomeScreen = () => {
         const payload = {
             title: postData.title,
             content: postData.content,
-            userId: CURRENT_USER_ID,
             tags: [resolvedType],
         };
 
         try {
-            const response = await fetch(`${BASE_URL}/posts`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const createdPost = await response.json();
+            const createdPost = await postService.createPost(payload);
 
             const newPost = {
                 ...createdPost,
                 id: createdPost._id ?? createdPost.id,
                 type: createdPost.tags?.[0] ?? resolvedType,
-                authorId: CURRENT_USER_ID, // 🎯 3 NOKTA ÇÖZÜMÜ
+                authorId: createdPost.userId ?? createdPost.author?._id,
                 author: createdPost.author ?? {
                     name: CURRENT_USER.name,
                     username: CURRENT_USER.username,
@@ -101,13 +92,14 @@ const HomeScreen = () => {
             setModalVisible(false);
         } catch (error) {
             console.error('Gönderi oluşturulamadı:', error);
-            Alert.alert('Hata', 'Gönderi paylaşılırken bir sorun oluştu.');
+            if (error.response?.status !== 401) {
+                Alert.alert('Hata', 'Gönderi paylaşılırken bir sorun oluştu.');
+            }
         }
     };
 
     // ── GÖREV 1: Güncelleme — PUT /posts/:id ─────────────────────────────
     const handleUpdate = async (postId, updatedData) => {
-        // Modal'dan gelen category verisini backend'in anladığı 'tags' formatına çeviriyoruz
         const resolvedType = updatedData.category ?? updatedData.type ?? 'announcement';
 
         const payload = {
@@ -117,46 +109,36 @@ const HomeScreen = () => {
         };
 
         try {
-            const response = await fetch(`${BASE_URL}/posts/${postId}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload),
-            });
+            const savedPost = await postService.updatePost(postId, payload);
 
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-            const savedPost = await response.json();
-
-            // Backend'den dönen veriyi ekrana uygun hale getiriyoruz
             const normalized = {
                 ...savedPost,
                 id: savedPost._id ?? savedPost.id,
                 type: savedPost.tags?.[0] ?? resolvedType,
-                authorId: savedPost.userId ?? CURRENT_USER_ID,
+                authorId: savedPost.userId ?? savedPost.author?._id,
             };
 
-            // Sadece güncellenen postu bul ve değiştir
             setPosts((prev) =>
                 prev.map((p) => (p.id === postId ? { ...p, ...normalized } : p))
             );
             console.log('Gönderi güncellendi:', normalized);
         } catch (error) {
             console.error('Gönderi güncellenemedi:', error);
-            Alert.alert('Hata', 'Gönderi güncellenirken bir sorun oluştu.');
+            if (error.response?.status !== 401) {
+                Alert.alert('Hata', 'Gönderi güncellenirken bir sorun oluştu.');
+            }
         }
     };
 
     const handleDelete = async (postId) => {
         try {
-            const response = await fetch(`${BASE_URL}/posts/${postId}`, {
-                method: 'DELETE',
-            });
-
-            if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
+            await postService.deletePost(postId);
             setPosts((prev) => prev.filter((p) => p.id !== postId));
         } catch (error) {
             console.error('Gönderi silinemedi:', error);
-            Alert.alert('Hata', 'Gönderi silinirken bir sorun oluştu.');
+            if (error.response?.status !== 401) {
+                Alert.alert('Hata', 'Gönderi silinirken bir sorun oluştu.');
+            }
         }
     };
 

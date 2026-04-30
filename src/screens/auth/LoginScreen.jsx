@@ -49,9 +49,10 @@ const LoginScreen = ({ navigation }) => {
     } catch (error) {
       console.error("Giriş Hatası:", error);
       
-      // Backend'den gelen spesifik hata mesajını göster, yoksa genel hata ver
-      const errorMsg = error.response?.data?.message || "E-posta veya şifre hatalı.";
-      Alert.alert("Giriş Başarısız", errorMsg);
+      if (error.response?.status !== 401) {
+        const errorMsg = error.response?.data?.message || "E-posta veya şifre hatalı.";
+        Alert.alert("Giriş Başarısız", errorMsg);
+      }
     } finally {
       setLoading(false);
     }
