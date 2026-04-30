@@ -2,10 +2,16 @@ const postService = require('../services/postService');
 
 // 1. Gönderi Oluşturma (POST)
 exports.createPost = async (req, res) => {
+  // authMiddleware req.user'ı doldurmuş olmalı; yoksa 401 dön
+  if (!req.user) {
+    return res.status(401).json({ code: "UNAUTHORIZED", message: "Kimlik doğrulaması gerekli." });
+  }
+
   try {
     const { title, content, tags } = req.body;
-    const userId = req.user ? req.user.id : "60d0fe4f5311236168a109ca"; // Geçici test ID'si
-    
+    // ✅ Hardcoded test ID'si kaldırıldı; gerçek kullanıcı ID'si middleware'den geliyor
+    const userId = req.user._id ?? req.user.id;
+
     const savedPost = await postService.createPost({ userId, title, content, tags });
     res.status(201).json(savedPost);
   } catch (error) {
@@ -13,11 +19,9 @@ exports.createPost = async (req, res) => {
   }
 };
 
-
 // 2. Gönderileri Listeleme (GET)
 exports.getPosts = async (req, res) => {
   try {
-    // URL'den sayfa ve limit değerlerini alıyoruz (Örn: ?page=1&limit=10)
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const userId = req.query.userId;
@@ -36,11 +40,11 @@ exports.updatePost = async (req, res) => {
     const { title, content, tags } = req.body;
 
     const updatedPost = await postService.updatePost(postId, { title, content, tags });
-    
+
     if (!updatedPost) {
       return res.status(404).json({ code: "NOT_FOUND", message: "Gönderi bulunamadı" });
     }
-    
+
     res.status(200).json(updatedPost);
   } catch (error) {
     res.status(400).json({ code: "BAD_REQUEST", message: error.message });
@@ -57,7 +61,7 @@ exports.deletePost = async (req, res) => {
       return res.status(404).json({ code: "NOT_FOUND", message: "Gönderi bulunamadı" });
     }
 
-    res.status(204).send(); // Başarılı silmede içerik dönmez
+    res.status(204).send();
   } catch (error) {
     res.status(400).json({ code: "BAD_REQUEST", message: error.message });
   }
