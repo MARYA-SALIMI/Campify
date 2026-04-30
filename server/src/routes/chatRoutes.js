@@ -2,9 +2,9 @@ const express = require('express');
 const router = express.Router();
 const chatController = require('../controllers/chatController');
 
-// API Uç Noktaları (Endpoints)
-router.post('/', chatController.createChat);             // Sohbet kanalı oluştur
-router.get('/', chatController.getChats);                // Sohbetleri listele
-router.post('/:chatId/messages', chatController.sendMessage); // Mesaj gönder
+router.post('/', chatController.createChat);
+router.get('/', chatController.getChats);
+router.post('/:chatId/messages', chatController.sendMessage);
+router.get('/:chatId/messages', chatController.getMessages); // ── YENİ
 
 module.exports = router;
