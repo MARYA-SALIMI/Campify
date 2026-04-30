@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const postController = require('../controllers/postController');
 
-// ✅ ÇÖZÜM: Süslü parantez eklendi. Marya'nın dışa aktarma yöntemiyle eşleştirildi.
-const { authMiddleware } = require('../middleware/authMiddleware');
+// ✅ ÇÖZÜM: authMiddleware default olarak export edildiği için süslü parantez kaldırıldı.
+const authMiddleware = require('../middleware/authMiddleware');
 
 // API Uç Noktaları (Endpoints)
 router.post('/', authMiddleware, postController.createPost);    // ✅ Korumalı: Sadece giriş yapanlar gönderi atabilir
