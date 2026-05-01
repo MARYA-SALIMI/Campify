@@ -1,5 +1,5 @@
 import React from 'react';
-import { FlatList, View, Text, StyleSheet, ActivityIndicator } from 'react-native';
+import { ActivityIndicator, FlatList, StyleSheet, Text, View } from 'react-native';
 import PostCard from './PostCard';
 
 const PostList = ({
@@ -10,6 +10,7 @@ const PostList = ({
     ListHeaderComponent,
     // ── YENİ: HomeScreen'den gelen sahiplik prop'ları ────────────────────────
     currentUserId,
+    currentUserName, // 🎯 YENİ
     onDeletePost,
     onUpdatePost,
 }) => {
@@ -19,6 +20,7 @@ const PostList = ({
             onPress={onPostPress}
             // ── PostCard'ın beklediği prop adlarına birebir eşleniyor ────────
             currentUserId={currentUserId}
+            currentUserName={currentUserName} // 🎯 YENİ
             onDelete={onDeletePost}
             onUpdate={onUpdatePost}
         />

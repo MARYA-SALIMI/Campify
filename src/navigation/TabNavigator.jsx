@@ -1,10 +1,10 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 // Doğru paket ismi ve ihtiyacın olan ikonlar
-import { Home, MessageSquare, UserCircle, Users } from 'lucide-react-native';
-import ChatListScreen from '../screens/chats/ChatListScreen';
+import { Home, MessageCircle, UserCircle, Users } from 'lucide-react-native';
 import HomeScreen from '../screens/main/HomeScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import TeamsScreen from '../screens/teams/TeamsScreen';
+import ChatStackNavigator from './ChatStackNavigator';
 
 const Tab = createBottomTabNavigator();
 
@@ -43,14 +43,7 @@ export default function TabNavigator() {
         }} 
       />
 
-      <Tab.Screen 
-        name="Chats" 
-        component={ChatListScreen} 
-        options={{ 
-          tabBarLabel: 'Sohbet',
-          tabBarIcon: ({color, size}) => <MessageSquare color={color} size={size} /> 
-        }} 
-      />
+<Tab.Screen name="Chats" component={ChatStackNavigator} options={{ tabBarIcon: ({ color }) => <MessageCircle color={color} />, title: 'Mesajlar' }} />
 
       <Tab.Screen 
         name="Profile" 

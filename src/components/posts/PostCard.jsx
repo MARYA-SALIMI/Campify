@@ -1,13 +1,13 @@
+import { BookOpen, Megaphone, MessageCircle, MoreVertical, Pencil, Search, Trash2, Users } from 'lucide-react-native';
 import React, { useState } from 'react';
 import {
-    View,
-    Text,
-    TouchableOpacity,
-    StyleSheet,
     Modal,
     Pressable,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from 'react-native';
-import { MoreVertical, BookOpen, Users, Megaphone, Search, Pencil, Trash2, MessageCircle } from 'lucide-react-native';
 import EditPostModal from './EditPostModal';
 
 // console.log('Melisa: Profil sayfasında kullanıcı avatarı ve gönderi sayısı buradan gelecek')
@@ -77,7 +77,7 @@ const getCategoryKey = (post) => {
  * @param {function} onUpdate      — (postId, updatedData) => void
  * @param {function} onDelete      — (postId) => void
  */
-export default function PostCard({ post, currentUserId, onUpdate, onDelete }) {
+export default function PostCard({ post, currentUserId, currentUserName, onUpdate, onDelete }) {
     const [menuVisible, setMenuVisible] = useState(false);
     const [editModalVisible, setEditModalVisible] = useState(false);
 
@@ -133,7 +133,9 @@ export default function PostCard({ post, currentUserId, onUpdate, onDelete }) {
 
                 {/* ── Footer: Yazar | Yorum Butonu | Tarih ── */}
                 <View style={styles.footer}>
-                    <Text style={styles.authorName}>{post?.authorName || 'Anonim'}</Text>
+                    <Text style={styles.authorName}>
+                        {isOwner ? (currentUserName?.trim() ? currentUserName : 'Sen') : (post?.authorName || 'Anonim')}
+                    </Text>
 
                     {/* 🚪 MELİSA İÇİN KAPI: Yorum butonu — Melisa kendi kodlarını buraya bağlayacak */}
                     <TouchableOpacity

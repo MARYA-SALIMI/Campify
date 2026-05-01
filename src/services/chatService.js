@@ -1,40 +1,40 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import api from './api';
+import chatApi from './chatApi';
 
-// ── Yardımcı: Her istekte güncel token'ı AsyncStorage'dan çeker ──────────────
-const authConfig = async () => {
-    const token = await AsyncStorage.getItem('token');
-    return token
-        ? { headers: { Authorization: `Bearer ${token}` } }
-        : {};
-};
+const BASE = '/chats';
 
 export const getChats = async () => {
-    const response = await api.get('/chats', await authConfig());
+    const response = await chatApi.get(BASE);
     return response.data;
 };
 
 export const getChatById = async (chatId) => {
-    const response = await api.get(`/chats/${chatId}`, await authConfig());
+    if (!chatId) throw new Error('getChatById: chatId undefined');
+    const response = await chatApi.get(`${BASE}/${chatId}`);
     return response.data;
 };
 
 export const getMessages = async (chatId) => {
-    const response = await api.get(`/chats/${chatId}/messages`, await authConfig());
+    console.log('📢 [chatService] getMessages çağrıldı, gelen chatId:', chatId);
+    if (!chatId) throw new Error('getMessages: chatId undefined');
+    const endpoint = `${BASE}/${chatId}/messages`;
+    console.log('📢 [chatService] İstek atılan tam path:', endpoint);
+    const response = await chatApi.get(endpoint);
     return response.data;
 };
 
 export const sendMessage = async (chatId, messageData) => {
-    const response = await api.post(`/chats/${chatId}/messages`, messageData, await authConfig());
+    if (!chatId) throw new Error('sendMessage: chatId undefined');
+    const response = await chatApi.post(`${BASE}/${chatId}/messages`, messageData);
     return response.data;
 };
 
 export const createChat = async (participantId) => {
-    const response = await api.post('/chats', { participantId }, await authConfig());
+    const response = await chatApi.post(BASE, { participantId });
     return response.data;
 };
 
 export const deleteChat = async (chatId) => {
-    const response = await api.delete(`/chats/${chatId}`, await authConfig());
+    if (!chatId) throw new Error('deleteChat: chatId undefined');
+    const response = await chatApi.delete(`${BASE}/${chatId}`);
     return response.data;
 };
