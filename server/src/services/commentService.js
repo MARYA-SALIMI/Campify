@@ -14,7 +14,23 @@ const createComment = async (postId, authorId, text) => {
     return await newComment.save();
 };
 
+// Yorum güncelle (sadece text alanı)
+const updateComment = async (commentId, text) => {
+    return await Comment.findByIdAndUpdate(
+        commentId,
+        { text },
+        { new: true, runValidators: true }
+    );
+};
+
+// Yorum sil
+const deleteComment = async (commentId) => {
+    return await Comment.findByIdAndDelete(commentId);
+};
+
 module.exports = {
     getCommentsByPostId,
-    createComment
+    createComment,
+    updateComment,
+    deleteComment
 };

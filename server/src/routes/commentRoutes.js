@@ -8,4 +8,10 @@ router.get('/:postId', commentController.getComments);
 // POST: Yeni yorum ekle (/api/comments/:postId)
 router.post('/:postId', commentController.addComment);
 
+// PUT: Yorum güncelle (/api/comments/:commentId)
+router.put('/:commentId', commentController.updateComment);
+
+// DELETE: Yorum sil (/api/comments/:commentId)
+router.delete('/:commentId', commentController.deleteComment);
+
 module.exports = router;

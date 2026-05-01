@@ -27,7 +27,43 @@ const addComment = async (req, res) => {
     }
 };
 
+// PUT /api/comments/:commentId — Yorum güncelle
+const updateComment = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const { text } = req.body;
+
+        if (!text) {
+            return res.status(400).json({ mesaj: "Yeni metin (text) zorunludur." });
+        }
+
+        const updated = await commentService.updateComment(commentId, text);
+        if (!updated) {
+            return res.status(404).json({ mesaj: "Yorum bulunamadı." });
+        }
+        res.status(200).json(updated);
+    } catch (error) {
+        res.status(500).json({ mesaj: "Yorum güncellenemedi", hata: error.message });
+    }
+};
+
+// DELETE /api/comments/:commentId — Yorum sil
+const deleteComment = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const deleted = await commentService.deleteComment(commentId);
+        if (!deleted) {
+            return res.status(404).json({ mesaj: "Yorum bulunamadı." });
+        }
+        res.status(200).json({ mesaj: "Yorum başarıyla silindi." });
+    } catch (error) {
+        res.status(500).json({ mesaj: "Yorum silinemedi", hata: error.message });
+    }
+};
+
 module.exports = {
     getComments,
-    addComment
+    addComment,
+    updateComment,
+    deleteComment
 };
