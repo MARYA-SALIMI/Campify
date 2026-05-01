@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react-native';
 import PostList from '../../components/posts/PostList';
 import EditPostModal from '../../components/posts/EditPostModal';
 import * as postService from '../../services/postService';
+import { useAuth } from '../../context/AuthContext';
 
 const BASE_URL = 'https://campify-api-l1vf.onrender.com/api';
 
@@ -19,11 +20,17 @@ const FILTERS = [
     { key: 'lost', label: 'Kayıp Eşya', color: '#0EA5E9', bg: 'rgba(14,165,233,0.15)', icon: '💬' },
 ];
 
-const CURRENT_USER_ID = '60d0fe4f5311236168a109ca';
-const CURRENT_USER = { name: 'Sinem', username: 'sinem' };
-
 const HomeScreen = () => {
     const router = useRouter();
+    const { user } = useAuth();
+    
+    const CURRENT_USER_ID = user?._id || user?.id || '';
+    const CURRENT_USER_NAME = user ? (
+        `${user.firstName || ''} ${user.lastName || ''}`.trim() || 
+        user.name || 
+        user.username || 
+        ''
+    ) : '';
     const [activeFilter, setActiveFilter] = useState('all');
     const [posts, setPosts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -82,8 +89,8 @@ const HomeScreen = () => {
                 type: createdPost.tags?.[0] ?? resolvedType,
                 authorId: createdPost.userId ?? createdPost.author?._id,
                 author: createdPost.author ?? {
-                    name: CURRENT_USER.name,
-                    username: CURRENT_USER.username,
+                    name: CURRENT_USER_NAME,
+                    username: user?.username || '',
                 },
                 commentCount: createdPost.commentCount ?? 0,
             };
@@ -188,6 +195,7 @@ const HomeScreen = () => {
                     onPostPress={(post) => router.push({ pathname: '/PostDetail', params: { id: post.id } })}
                     ListHeaderComponent={ListHeader}
                     currentUserId={CURRENT_USER_ID}
+                    currentUserName={CURRENT_USER_NAME} // 🎯 AKTİF KULLANICI ADI EKLENDİ
                     onDeletePost={handleDelete} // 🎯 DOĞRU PROP İSİMLERİ
                     onUpdatePost={handleUpdate} // 🎯 DOĞRU PROP İSİMLERİ
                 />
