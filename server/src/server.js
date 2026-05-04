@@ -2,9 +2,13 @@ require('dotenv').config(); // .env dosyasını okumak için gerekli modül
 const app = require('./app');
 const connectDB = require('./config/db');
 const { connectRabbitMQ } = require('./config/rabbitmq');
+const { connectRedis } = require('./config/redis');
 
 // Önce veritabanına bağlanıyoruz
 connectDB();
+
+// Redis bağlantısını başlatıyoruz
+connectRedis();
 
 // RabbitMQ bağlantısını başlatıyoruz ve ardından Worker'ı çağırıyoruz
 connectRabbitMQ().then(() => {

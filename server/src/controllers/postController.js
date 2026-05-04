@@ -1,5 +1,18 @@
 const postService = require('../services/postService');
 const { getChannel } = require('../config/rabbitmq');
+const { redisClient } = require('../config/redis');
+
+// Redis önbelleğini temizlemek için yardımcı fonksiyon
+const invalidatePostCache = async () => {
+  try {
+    const keys = await redisClient.keys('campify:posts*');
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+    }
+  } catch (err) {
+    console.error('Redis cache temizleme hatası:', err);
+  }
+};
 
 
 // 1. Gönderi Oluşturma (POST)
@@ -35,6 +48,9 @@ exports.createPost = async (req, res) => {
       // Gönderi MongoDB'ye kaydedildiği için hatayı fırlatmıyoruz, akış devam ediyor.
     }
 
+    // Yeni post oluşturulduğu için cache'i temizliyoruz
+    await invalidatePostCache();
+
     res.status(201).json(savedPost);
   } catch (error) {
     res.status(400).json({ code: "VALIDATION_ERROR", message: error.message });
@@ -48,7 +64,28 @@ exports.getPosts = async (req, res) => {
     const limit = parseInt(req.query.limit) || 10;
     const userId = req.query.userId;
 
+    const cacheKey = `campify:posts:page_${page}:limit_${limit}:user_${userId || 'all'}`;
+
+    try {
+      // 1. Önce Redis'te cache var mı diye kontrol et
+      const cachedPosts = await redisClient.get(cacheKey);
+      if (cachedPosts) {
+        return res.status(200).json(JSON.parse(cachedPosts));
+      }
+    } catch (redisErr) {
+      console.error('Redis GET hatası:', redisErr);
+    }
+
+    // 2. Cache'te yoksa MongoDB'den çek
     const posts = await postService.getAllPosts(page, limit, userId);
+    
+    try {
+      // 3. Çekilen veriyi 3600 saniye (1 saat) süreliğine Redis'e kaydet
+      await redisClient.setEx(cacheKey, 3600, JSON.stringify(posts));
+    } catch (redisErr) {
+      console.error('Redis SET hatası:', redisErr);
+    }
+
     res.status(200).json(posts);
   } catch (error) {
     res.status(400).json({ code: "BAD_REQUEST", message: error.message });
@@ -67,6 +104,9 @@ exports.updatePost = async (req, res) => {
       return res.status(404).json({ code: "NOT_FOUND", message: "Gönderi bulunamadı" });
     }
 
+    // Post güncellendiği için cache'i temizliyoruz
+    await invalidatePostCache();
+
     res.status(200).json(updatedPost);
   } catch (error) {
     res.status(400).json({ code: "BAD_REQUEST", message: error.message });
@@ -82,6 +122,9 @@ exports.deletePost = async (req, res) => {
     if (!deletedPost) {
       return res.status(404).json({ code: "NOT_FOUND", message: "Gönderi bulunamadı" });
     }
+
+    // Post silindiği için cache'i temizliyoruz
+    await invalidatePostCache();
 
     res.status(204).send();
   } catch (error) {
