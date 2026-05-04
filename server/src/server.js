@@ -1,9 +1,16 @@
 require('dotenv').config(); // .env dosyasını okumak için gerekli modül
 const app = require('./app');
 const connectDB = require('./config/db');
+const { connectRabbitMQ } = require('./config/rabbitmq');
 
 // Önce veritabanına bağlanıyoruz
 connectDB();
+
+// RabbitMQ bağlantısını başlatıyoruz ve ardından Worker'ı çağırıyoruz
+connectRabbitMQ().then(() => {
+  const startNotificationWorker = require('./workers/notificationWorker');
+  startNotificationWorker();
+}).catch(err => console.error("RabbitMQ başlatılamadı:", err));
 
 // .env dosyasından portu alıyoruz, bulamazsa 3000'i kullanıyor
 const PORT = process.env.PORT || 3000;

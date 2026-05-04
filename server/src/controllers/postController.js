@@ -1,4 +1,6 @@
 const postService = require('../services/postService');
+const { getChannel } = require('../config/rabbitmq');
+
 
 // 1. Gönderi Oluşturma (POST)
 exports.createPost = async (req, res) => {
@@ -13,6 +15,26 @@ exports.createPost = async (req, res) => {
     const userId = req.user._id ?? req.user.id;
 
     const savedPost = await postService.createPost({ userId, title, content, tags });
+    
+    // RabbitMQ'ya asenkron işlem için mesaj gönderiliyor
+    try {
+      const channel = getChannel();
+      const queue = 'campify_post_queue';
+      
+      const message = JSON.stringify({
+        postId: savedPost._id || savedPost.id,
+        title: savedPost.title,
+        content: savedPost.content,
+        userId: userId
+      });
+
+      await channel.assertQueue(queue, { durable: true });
+      channel.sendToQueue(queue, Buffer.from(message));
+    } catch (mqError) {
+      console.error('RabbitMQ kuyruğuna mesaj gönderilemedi:', mqError);
+      // Gönderi MongoDB'ye kaydedildiği için hatayı fırlatmıyoruz, akış devam ediyor.
+    }
+
     res.status(201).json(savedPost);
   } catch (error) {
     res.status(400).json({ code: "VALIDATION_ERROR", message: error.message });
