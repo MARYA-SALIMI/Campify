@@ -43,39 +43,79 @@ const ChatItem = ({ item, onChatPress }) => {
     const [chatUserName, setChatUserName] = useState(item.otherUser?.name || 'Yükleniyor...');
     
     useEffect(() => {
+        if (item.isGroup) return;
+
         if (item.otherUser?.id) {
             const otherIdStr = String(item.otherUser.id);
-            console.log(`[ChatItem] Profil sorgulanıyor: ${otherIdStr}`);
-            import('../../services/authService').then(({ authService }) => {
-                authService.getProfile(otherIdStr)
-                    .then(profile => {
-                        console.log(`[ChatItem] Profil cevabı (${otherIdStr}):`, profile ? (profile.name || profile.username || "İsimsiz") : "BOŞ");
-                        if (profile) {
-                            const finalName = profile.name || 
-                                (profile.ad || profile.firstName ? `${profile.ad || profile.firstName || ''} ${profile.soyad || profile.lastName || ''}`.trim() : null) ||
-                                profile.username || 'Kampüs Sakini';
-                            setChatUserName(finalName);
-                        } else {
-                            setChatUserName('Kampüs Sakini');
+            
+            const fetchProfile = async () => {
+                try {
+                    const { authService } = await import('../../services/authService');
+                    let profile = await authService.getProfile(otherIdStr);
+                    
+                    // Eğer ana profil servisi başarısız olursa veya eksik veri dönerse Render sunucularını dene
+                    if (!profile || (!profile.name && !profile.ad)) {
+                        const { default: axios } = await import('axios');
+                        // 1. Marya/Sinem Sunucusu
+                        try {
+                            const res = await axios.get(`https://campify-api-2nzn.onrender.com/v1/users/${otherIdStr}`);
+                            if (res.data) profile = res.data;
+                        } catch (e1) {
+                            // 2. Emine Sunucusu
+                            try {
+                                const res2 = await axios.get(`https://campify-api-l1vf.onrender.com/api/users/${otherIdStr}`);
+                                if (res2.data) profile = res2.data;
+                            } catch (e2) {}
                         }
-                    })
-                    .catch((err) => {
-                        console.log(`[ChatItem] Profil HATASI (${otherIdStr}):`, err.message);
-                        // Eğer profil bulunamadıysa (404), chat listesindeki ismi koruyalım
+                    }
+
+                    if (profile) {
+                        const finalName = profile.name || 
+                            (profile.ad || profile.firstName ? `${profile.ad || profile.firstName || ''} ${profile.soyad || profile.lastName || ''}`.trim() : null) ||
+                            profile.username || 'Kampüs Sakini';
+                        setChatUserName(finalName);
+                    } else {
+                        setChatUserName(`Kullanıcı (${otherIdStr.slice(-4)})`);
+                    }
+                } catch (err) {
+                    // GENEL FALLBACK (Tüm sunucuları dene)
+                    try {
+                        const { default: axios } = await import('axios');
+                        const hosts = [
+                            `https://campify-api-2nzn.onrender.com/v1/users/${otherIdStr}`,
+                            `https://campify-api-l1vf.onrender.com/api/users/${otherIdStr}`
+                        ];
+                        for (const host of hosts) {
+                            try {
+                                const res = await axios.get(host);
+                                if (res.data) {
+                                    const p = res.data;
+                                    const n = p.name || `${p.ad || p.firstName || ''} ${p.soyad || p.lastName || ''}`.trim() || p.username || 'Kampüs Sakini';
+                                    setChatUserName(n);
+                                    return;
+                                }
+                            } catch (e) {}
+                        }
+                        
                         if (item.otherUser?.name && item.otherUser.name !== 'Yükleniyor...' && item.otherUser.name !== 'Kampüs Sakini') {
                             setChatUserName(item.otherUser.name);
                         } else {
                             setChatUserName(`Kullanıcı (${otherIdStr.slice(-4)})`);
                         }
-                    });
-            });
+                    } catch (eFinal) {
+                        setChatUserName(`Kullanıcı (${otherIdStr.slice(-4)})`);
+                    }
+                }
+            };
+
+            fetchProfile();
         }
-    }, [item.otherUser?.id]);
+    }, [item.otherUser?.id, item.isGroup]);
 
     return (
         <TouchableOpacity 
             style={styles.chatItem} 
-            onPress={() => onChatPress({ ...item, otherUser: { ...item.otherUser, name: chatUserName } })} 
+            onPress={() => onChatPress(item, chatUserName)} 
             activeOpacity={0.75}
         >
             {hasUnread && <View style={styles.unreadStrip} />}
@@ -123,14 +163,20 @@ const ChatListScreen = () => {
     const [isLoading, setIsLoading] = useState(true);
 
     const normalizeChat = useCallback((raw) => {
-        const otherId = raw.participants?.find((uid) => uid !== currentUserId) ?? null;
+        const participants = raw.participants || [];
+        const otherParticipants = participants.filter((uid) => uid !== currentUserId);
+        const isGroup = otherParticipants.length > 1;
+        
+        const otherId = otherParticipants[0] ?? null;
         const shortId = otherId ? (typeof otherId === 'string' ? otherId.slice(-4).toUpperCase() : '????') : '????';
 
         return {
             id: raw._id || raw.id || raw.chatId,
+            isGroup: isGroup,
+            participantCount: participants.length,
             otherUser: {
                 id: otherId,
-                name: 'Yükleniyor...',
+                name: isGroup ? `Grup Sohbeti (${participants.length})` : 'Yükleniyor...',
                 username: `@kullanici_${shortId}`,
             },
             lastMessage: {
@@ -170,7 +216,7 @@ const ChatListScreen = () => {
         navigation.navigate('ChatRoomScreen', { id: chatId, name: chatName });
     };
 
-    const handleChatPress = (item) => {
+    const handleChatPress = (item, currentName) => {
         setChats((prev) =>
             prev.map((chat) =>
                 (chat._id || chat.id) === (item._id || item.id)
@@ -181,7 +227,7 @@ const ChatListScreen = () => {
 
         navigation.navigate('ChatRoomScreen', {
             id: item.id || item._id,
-            name: item.otherUser?.name ?? 'Sohbet',
+            name: currentName || item.otherUser?.name || 'Sohbet',
         });
     };
 

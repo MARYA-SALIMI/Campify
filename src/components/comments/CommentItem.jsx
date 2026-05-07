@@ -1,6 +1,6 @@
-import { Check, Heart, MoreHorizontal, Pencil, Trash2, X } from 'lucide-react-native';
-import React, { useState, useEffect } from 'react';
-import { Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Check, Heart, Pencil, Trash2, X } from 'lucide-react-native';
+import React, { useEffect, useState } from 'react';
+import { Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { authService } from '../../services/authService';
 
 const formatCommentTime = (dateString) => {

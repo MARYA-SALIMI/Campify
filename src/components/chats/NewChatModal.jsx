@@ -45,8 +45,66 @@ export default function NewChatModal({ visible, onClose, onStartChat }) {
         }
         setIsSearching(true);
         try {
-            const results = await searchUsers(query);
-            setSearchResults(results);
+            // 1. Vercel (Melisa) araması
+            let combinedResults = await searchUsers(query);
+            
+            // 2. Render Sunucuları (Marya & Emine)
+            try {
+                const { default: axios } = await import('axios');
+                const { default: AsyncStorage } = await import('@react-native-async-storage/async-storage');
+                const token = await AsyncStorage.getItem('token');
+                
+                const renderHosts = [
+                    'https://campify-api-2nzn.onrender.com/v1/users',
+                    'https://campify-api-l1vf.onrender.com/api/users'
+                ];
+
+                for (const host of renderHosts) {
+                    try {
+                        const res = await axios.get(host, {
+                            headers: token ? { Authorization: `Bearer ${token}` } : {},
+                            params: { q: query, search: query }
+                        });
+                        if (res.data) {
+                            const rawUsers = Array.isArray(res.data) ? res.data : (res.data.users || []);
+                            rawUsers.forEach(u => {
+                                const id = u._id || u.id;
+                                if (id && !combinedResults.find(r => r.id === id)) {
+                                    combinedResults.push({
+                                        id: id,
+                                        name: u.name || `${u.ad || u.firstName || ''} ${u.soyad || u.lastName || ''}`.trim() || u.username || 'Kullanıcı',
+                                        username: u.username || `@${u.email?.split('@')[0] || 'ogrenci'}`
+                                    });
+                                }
+                            });
+                        }
+                    } catch (e) {}
+                }
+            } catch (e) {}
+
+            // 3. FALLBACK: Manuel liste (Garanti olsun diye)
+            const knownUsers = [
+                { id: '69ef68dee8e87060bf7b7e89', name: 'Sinem Havan', username: '@sinem' },
+                { id: '69f2279d89e63ae5a547e6f6', name: 'Marya Salimi', username: '@marya' },
+                { id: 'emine_id_placeholder', name: 'Emine', username: '@emine' },
+            ];
+
+            knownUsers.forEach(u => {
+                const alreadyFound = combinedResults.find(r => 
+                    r.id === u.id || r.name.toLowerCase().includes(u.name.toLowerCase())
+                );
+                if (!alreadyFound && (u.name.toLowerCase().includes(query.toLowerCase()) || u.username.toLowerCase().includes(query.toLowerCase()))) {
+                    combinedResults.push(u);
+                }
+            });
+            
+            // Filtreleme (Client-side)
+            const filtered = combinedResults.filter(u => 
+                (u.name?.toLowerCase().includes(query.toLowerCase()) || 
+                 u.username?.toLowerCase().includes(query.toLowerCase()))
+            );
+
+            setSearchResults(filtered);
         } catch (error) {
             console.error(error);
         } finally {

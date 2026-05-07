@@ -73,6 +73,7 @@ const ChatRoomScreen = () => {
     const [messages, setMessages] = useState([]);
     const [inputText, setInputText] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [headerName, setHeaderName] = useState(name || 'Sohbet');
     const [editingMsgId, setEditingMsgId] = useState(null);
     const [animatingLikeId, setAnimatingLikeId] = useState(null);
     const [isOtherTyping, setIsOtherTyping] = useState(false);
@@ -81,6 +82,71 @@ const ChatRoomScreen = () => {
     const flatListRef = useRef(null);
     const lastPressRef = useRef(0);
     const typingTimeoutRef = useRef(null);
+
+    // --- İSİM ÇEKME MANTIĞI ---
+    useEffect(() => {
+        const isGeneric = !headerName || headerName === 'Sohbet' || headerName === 'Yükleniyor...' || headerName === 'Kampüs Sakini' || headerName.includes('Kullanıcı');
+        
+        if (isGeneric && id) {
+            const fetchOtherUserName = async () => {
+                try {
+                    const chatData = await getMessages(id);
+                    const otherId = chatData.participants?.find(uid => uid !== currentUserId);
+                    if (otherId) {
+                        try {
+                            const { authService } = await import('../../services/authService');
+                            let profile = await authService.getProfile(otherId);
+                            
+                            // 2nzn Fallback if main fails
+                            if (!profile || (!profile.name && !profile.ad)) {
+                                const { default: axios } = await import('axios');
+                                try {
+                                    const res = await axios.get(`https://campify-api-2nzn.onrender.com/v1/users/${otherId}`);
+                                    if (res.data) profile = res.data;
+                                } catch (e1) {
+                                    // l1vf Fallback
+                                    try {
+                                        const res2 = await axios.get(`https://campify-api-l1vf.onrender.com/api/users/${otherId}`);
+                                        if (res2.data) profile = res2.data;
+                                    } catch (e2) {}
+                                }
+                            }
+
+                            if (profile) {
+                                const finalName = profile.name || 
+                                    (profile.ad || profile.firstName ? `${profile.ad || profile.firstName || ''} ${profile.soyad || profile.lastName || ''}`.trim() : null) ||
+                                    profile.username || `Kullanıcı (${String(otherId).slice(-4)})`;
+                                setHeaderName(finalName);
+                            }
+                        } catch (e) {
+                            // GENEL FALLBACK
+                            try {
+                                const { default: axios } = await import('axios');
+                                const hosts = [
+                                    `https://campify-api-2nzn.onrender.com/v1/users/${otherId}`,
+                                    `https://campify-api-l1vf.onrender.com/api/users/${otherId}`
+                                ];
+                                for (const host of hosts) {
+                                    try {
+                                        const res = await axios.get(host);
+                                        if (res.data) {
+                                            const p = res.data;
+                                            const n = p.name || `${p.ad || p.firstName || ''} ${p.soyad || p.lastName || ''}`.trim() || p.username || `Kullanıcı (${String(otherId).slice(-4)})`;
+                                            setHeaderName(n);
+                                            return;
+                                        }
+                                    } catch (eHost) {}
+                                }
+                            } catch (eFinal) {}
+                        }
+                    }
+                } catch (error) {
+                    console.log("[ChatRoom] İsim çekme hatası:", error);
+                }
+            };
+            fetchOtherUserName();
+        }
+    }, [id, currentUserId]);
 
     useFocusEffect(
         useCallback(() => {
@@ -317,7 +383,7 @@ const ChatRoomScreen = () => {
 
                 <View style={styles.headerCenter}>
                     <Text style={styles.headerName} numberOfLines={1}>
-                        {name ?? 'Sohbet'}
+                        {headerName}
                     </Text>
                     <Text style={styles.headerSub}>Sohbet #{id}</Text>
                 </View>
