@@ -4,6 +4,7 @@ const cors = require('cors');
 const YAML = require('yamljs');
 const swaggerUi = require('swagger-ui-express');
 require('dotenv').config();
+const redis = require('redis');
 
 const app = express();
 
@@ -56,6 +57,8 @@ mongoose.connect(MONGO_URI)
     console.error("❌ MongoDB Connection Error:", err);
   });
 
+
+
     // Bu kodu router tanımlamalarından hemen sonraya ekleyebilirsin
 app.get("/v1/test-redis", async (req, res) => {
   try {
@@ -78,6 +81,16 @@ app.get("/v1/test-redis", async (req, res) => {
   }
 });
 
+
+const redisClient = redis.createClient({
+    url: process.env.REDIS_URL || 'redis://localhost:6379'
+});
+
+// Bağlantı hatası almamak için connect komutunu da ekleyelim (eğer daha önce bir yerde yapılmadıysa)
+redisClient.on('error', err => console.log('Redis Client Error', err));
+if (!redisClient.isOpen) {
+    redisClient.connect();
+}
 
 
 
