@@ -21,7 +21,44 @@ redisClient.on('error', (err) => console.log('🔥 Redis Hatası:', err));
 redisClient.on('connect', () => console.log('✅ Redis bağlantısı başarılı!'));
 
 redisClient.connect().catch(console.error);
+
+// Takım listesiyle ilgili önbelleği temizleyen fonksiyon
+async function clearTeamsCache() {
+  try {
+    const keys = await redisClient.keys('teams_*');
+    if (keys.length > 0) {
+      await redisClient.del(keys);
+      console.log('🧹 [REDIS] Eski önbellek temizlendi.');
+    }
+  } catch (err) {
+    console.error('🔥 Redis Cache temizleme hatası:', err);
+  }
+}
 // ==========================================
+
+const amqp = require('amqplib');
+
+// RabbitMQ'ya mesaj gönderen yardımcı fonksiyon
+async function sendToQueue(queue, message) {
+  
+  try {
+    // Lokaldeki Docker RabbitMQ'ya bağlanıyoruz
+    const connection = await amqp.connect(process.env.RABBITMQ_URL || 'amqp://localhost');
+    const channel = await connection.createChannel();
+    
+    await channel.assertQueue(queue, { durable: false });
+    channel.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+    
+    console.log(`✉️ [RabbitMQ] Kuyruğa mesaj eklendi: ${queue}`);
+    
+    setTimeout(() => {
+      connection.close();
+    }, 500);
+  } catch (error) {
+    console.error("🔥 RabbitMQ Hatası:", error);
+  }
+}
+
 const errRes = (res, status, code, message, errorDetail = null) => {
   if (errorDetail) {
     console.error(`🔥 [${code}] HATA DETAYI:`, errorDetail); // Terminalde göreceğiz
@@ -36,6 +73,7 @@ exports.createTeam = async (req, res) => {
       baslik, aciklama, kontenjan, arananYetkinlikler,
       userId: req.user.id,
     });
+    await clearTeamsCache();
     res.status(201).json(team);
   } catch (err) {
     if (err.name === "ValidationError")
@@ -101,6 +139,7 @@ exports.updateTeam = async (req, res) => {
       return errRes(res, 403, "FORBIDDEN", "Yalnızca ilan sahibi güncelleyebilir");
 
     const updated = await teamService.updateTeam(team, req.body);
+    await clearTeamsCache();
     res.json(updated);
   } catch (err) {
     if (err.code) return errRes(res, 400, err.code, err.message);
@@ -118,6 +157,7 @@ exports.deleteTeam = async (req, res) => {
       return errRes(res, 403, "FORBIDDEN", "Yalnızca ilan sahibi silebilir");
 
     await teamService.deleteTeam(team);
+    await clearTeamsCache();
     res.status(204).send();
   } catch (err) {
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
@@ -131,6 +171,17 @@ exports.joinTeam = async (req, res) => {
     if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
 
     const updated = await teamService.joinTeam(team, req.user.id);
+    await clearTeamsCache();
+    // 2. RABBITMQ MESAJINI KUYRUĞA ATIYORUZ (YENİ)
+    // ==========================================
+    await sendToQueue('team_notifications', {
+      event: 'USER_JOINED_TEAM',
+      userId: req.user.id,
+      teamId: updated._id,
+      teamTitle: team.baslik,
+      timestamp: new Date()
+    });
+    // ==========================================
     res.json({
       message: "Ekibe başarıyla katıldınız.",
       teamId: updated._id,
@@ -149,6 +200,8 @@ exports.leaveTeam = async (req, res) => {
     if (!team) return errRes(res, 404, "NOT_FOUND", "Ekip ilanı bulunamadı");
 
     const updated = await teamService.leaveTeam(team, req.user.id);
+    await clearTeamsCache();
+
     res.json({
       message: "Ekipten başarıyla ayrıldınız.",
       teamId: updated._id,
