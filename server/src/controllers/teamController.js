@@ -1,6 +1,27 @@
 // controllers/teamController.js
 const teamService = require("../services/teamService");
+const redis = require("redis");
 
+// ==========================================
+// REDIS BAĞLANTISI VE KURULUMU
+// ==========================================
+const redisUrl = process.env.REDIS_URL || 'redis://localhost:6379';
+const redisClient = redis.createClient({
+    url: redisUrl,
+    // Bağlantı koparsa veya bulamazsa uygulamayı çökertmemesi için:
+    socket: {
+        reconnectStrategy: (retries) => {
+            if (retries > 3) return false; // 3 kere dene, olmazsa vazgeç
+            return 1000;
+        }
+    }
+});
+
+redisClient.on('error', (err) => console.log('🔥 Redis Hatası:', err));
+redisClient.on('connect', () => console.log('✅ Redis bağlantısı başarılı!'));
+
+redisClient.connect().catch(console.error);
+// ==========================================
 const errRes = (res, status, code, message, errorDetail = null) => {
   if (errorDetail) {
     console.error(`🔥 [${code}] HATA DETAYI:`, errorDetail); // Terminalde göreceğiz
@@ -23,13 +44,33 @@ exports.createTeam = async (req, res) => {
   }
 };
 
-// GET /teams
+// GET /teams (REDIS EKLENEN KISIM BURASI)
 exports.listTeams = async (req, res) => {
   try {
     const page = Math.max(1, parseInt(req.query.page) || 1);
     const limit = Math.min(50, Math.max(1, parseInt(req.query.limit) || 10));
     const filter = req.query.filter || "all";
+
+    // 1. İstek parametrelerine göre benzersiz bir Redis anahtarı oluşturuyoruz
+    const cacheKey = `teams_page${page}_limit${limit}_filter${filter}`;
+
+    // 2. Önce Redis'e bakıyoruz, bu veri daha önce çekilmiş mi?
+    const cachedData = await redisClient.get(cacheKey);
+
+    if (cachedData) {
+      // Eğer veri Redis'te varsa, MongoDB'yi hiç yormadan doğrudan gönderiyoruz
+      console.log(`⚡ [REDIS] Veriler cache üzerinden getirildi! (Key: ${cacheKey})`);
+      return res.json(JSON.parse(cachedData));
+    }
+
+    // 3. Veri Redis'te yoksa, her zamanki gibi veritabanından (MongoDB) çekiyoruz
+    console.log(`🐢 [MONGODB] Veriler veritabanından çekiliyor... (Key: ${cacheKey})`);
     const result = await teamService.listTeams(page, limit, req.user.id, filter);
+
+    // 4. Çekilen veriyi bir sonraki istek için Redis'e kaydediyoruz 
+    // (3600 saniye = 1 saat boyunca cache'de kalacak)
+    await redisClient.setEx(cacheKey, 3600, JSON.stringify(result));
+
     res.json(result);
   } catch (err) {
     errRes(res, 500, "SERVER_ERROR", "Sunucu hatası");
