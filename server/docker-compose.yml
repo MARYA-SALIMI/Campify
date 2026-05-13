@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - MONGO_URI=${MONGO_URI}
+      - REDIS_URL=redis://cache:6379
+      - RABBITMQ_URL=amqp://queue:5672
+    depends_on:
+      - cache
+      - queue
+    networks:
+      - app-network
+
+  cache:
+    image: redis:alpine
+    ports:
+      - "6379:6379"
+    networks:
+      - app-network
+
+  queue:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - app-network
+    # RabbitMQ'nun gerçekten hazır olup olmadığını denetleyen kısım
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "check_running"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  mail-worker:
+    build: .
+    command: node src/workers/emailWorker.js
+    env_file:
+      - .env
+    networks:
+      - app-network
+    depends_on:
+      queue:
+        condition: service_healthy # Sadece queue 'healthy' olduğunda worker başlar
+    restart: always # Eğer bir şekilde koparsa otomatik tekrar bağlanır
+
+networks:
+  app-network:
+    driver: bridge

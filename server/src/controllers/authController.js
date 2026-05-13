@@ -1,12 +1,13 @@
 const User = require('../models/User');
 const jwt = require('../utils/jwt');
 const bcrypt = require('bcryptjs');
+const { sendToQueue } = require('../utils/queue'); // RabbitMQ yardımcı fonksiyonumuz
 
 exports.registerUser = async (req, res, next) => {
   try {
     const { email, password, firstName, lastName } = req.body;
 
-    // Check if email exists
+    // Email kontrolü
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ code: "EMAIL_EXISTS", message: "Bu email zaten kullanımda" });
@@ -34,11 +35,35 @@ exports.registerUser = async (req, res, next) => {
 exports.loginUser = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    
+    // Şifreyi de seçiyoruz çünkü kontrol etmemiz lazım
     const user = await User.findOne({ email }).select("+password");
     if (!user) return res.status(401).json({ code: "UNAUTHORIZED", message: "Kimlik doğrulama başarısız" });
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(401).json({ code: "UNAUTHORIZED", message: "Kimlik doğrulama başarısız" });
+
+    // --- RABBITMQ & FIREBASE DOĞRULAMA KONTROLÜ ---
+    // Burada Firebase Admin SDK kullandığını varsayıyoruz. 
+    // Şimdilik simüle etmek için true veriyoruz.
+    const isEmailVerifiedOnFirebase = true; 
+
+    if (isEmailVerifiedOnFirebase && !user.isWelcomeSent) {
+      const welcomeMessage = {
+        userEmail: user.email,
+        userName: user.firstName,
+        subject: "Hesabın Onaylandı!",
+        content: "Artık Campify'ın tüm özelliklerini kullanabilirsin. Hoş geldin!"
+      };
+
+      // Kuyruğa gönder
+      await sendToQueue('welcome_emails', welcomeMessage);
+      
+      // Mailin tekrar tekrar gitmemesi için flag'i güncelle
+      user.isWelcomeSent = true;
+      await user.save();
+    }
+    // ----------------------------------------------
 
     const token = jwt.generateToken({ id: user._id });
 
@@ -61,6 +86,5 @@ exports.loginUser = async (req, res, next) => {
 };
 
 exports.logoutUser = async (req, res) => {
-  // JWT is stateless, frontend can just delete token
   res.status(200).json({ message: "Çıkış başarılı" });
 };

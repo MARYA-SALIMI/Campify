@@ -56,4 +56,29 @@ mongoose.connect(MONGO_URI)
     console.error("❌ MongoDB Connection Error:", err);
   });
 
+    // Bu kodu router tanımlamalarından hemen sonraya ekleyebilirsin
+app.get("/v1/test-redis", async (req, res) => {
+  try {
+    // Redis'e bir veri yazalım
+    await redisClient.set("campify_status", "Suleyman Demirel Universitesi - Redis Aktif!");
+    
+    // Yazdığımız veriyi geri okuyalım
+    const value = await redisClient.get("campify_status");
+    
+    res.status(200).json({
+      success: true,
+      message: "Redis bağlantısı başarılı!",
+      data: value
+    });
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: "Redis test hatası: " + err.message
+    });
+  }
+});
+
+
+
+
 module.exports = app;

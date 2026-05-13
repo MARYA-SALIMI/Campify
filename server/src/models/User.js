@@ -8,6 +8,7 @@ const userSchema = new mongoose.Schema({
   department: { type: String },
   interests: [{ type: String }],
   skills: [{ type: String }],
+  isWelcomeSent: { type: Boolean, default: false }
 }, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
