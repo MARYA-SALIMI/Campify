@@ -1,5 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useState } from "react";
+import React, { useState } from "react"; // useEffect eklendi
 import {
   ActivityIndicator,
   Alert,
@@ -12,128 +12,125 @@ import {
 } from "react-native";
 
 import { useAuth } from "../../context/AuthContext";
-
-// Backend servisimiz
 import TeamService from "../../services/teamService";
-// Projede giriş yapmış kullanıcının ID'sini (veya bilgisini) çekmek için Auth Context'ini buraya dahil etmelisin.
-// Aşağıdaki satırı kendi projenin yapısına göre ayarlamalısın.
-// import { useAuth } from "../../context/AuthContext";
 
 const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
-  // ŞİMDİLİK: Eğer AuthContext'in henüz tam hazır değilse, test için buraya manuel bir userId verebilirsin.
   const { user } = useAuth();
-  // Kullanıcı ID'si farklı isimlerle (id, _id, userId, uid) gelebilir, hepsini kontrol edelim
-  const currentUserId = user?._id || user?.id || user?.userId || user?.uid || null;
-  console.log('[TeamDetailModal] Kullanılan ID:', currentUserId);
-  console.log('[TeamDetailModal] Tüm User Objesi:', JSON.stringify(user));
-
   const [loading, setLoading] = useState(false);
+
+  // --- KRİTİK DEBUG LOGLARI ---
+  // Uygulama çalışırken terminaline bak, bu değerlerin ne geldiğini gör
 
   if (!team) return null;
 
-  // --- 1. VERİLERİ GÜVENLİ ÇEKME VE HESAPLAMA ---
+  const currentUserId = (user?._id || user?.id)?.toString();
+
+  // --- 1. VERİLERİ ÇEKME ---
   const baslik = team.baslik || "İsimsiz Ekip";
   const aciklama = team.aciklama || "Açıklama belirtilmemiş.";
   const yetkinlikler = team.arananYetkinlikler || [];
   const kontenjan = team.kontenjan || 1;
-  const uyeler = team.uyeler || [];
+  const uyeler = team.uyeler || team.members || [];
   const mevcutUyeSayisi = uyeler.length;
 
+  // --- 2. DURUM KONTROLLERİ (EN SAĞLAM HALİ) ---
+  // Güvenli ID çıkarıcı
+  const getSafeId = (val) => {
+    if (!val) return null;
+    if (typeof val === "object") return (val._id || val.id)?.toString();
+    return val.toString();
+  };
+  // Kurucu kontrolü
+  const isOwner = getSafeId(team.olusturanId) === currentUserId;
+
+  // Üyelik kontrolü
+  const isMember = uyeler.some((u) => getSafeId(u) === currentUserId);
   const isOpen = mevcutUyeSayisi < kontenjan;
   const statusText = isOpen ? "Açık" : "Dolu";
 
-  const currentIdStr = currentUserId ? String(currentUserId).trim().toLowerCase() : null;
+  // --- 3. AKSİYONLAR ---
 
-  console.log('--- TEAM ÜYELİK KONTROLÜ ---');
-  console.log('Senin ID:', currentIdStr);
-  console.log('Ekip Üyeleri:', uyeler.map(u => typeof u === 'string' ? u : (u._id || u.id)));
-
-  // --- 2. KULLANICI DURUMUNU KONTROL ETME ---
-  // Kullanıcı zaten bu ekibin bir üyesi mi?
-  const isMember = uyeler.some((u) => {
-    const uyeId = typeof u === 'string' ? u : (u._id || u.id);
-    const match = uyeId && currentIdStr && String(uyeId).trim().toLowerCase() === currentIdStr;
-    if (match) console.log('Eşleşme Bulundu! Üyesiniz.');
-    return match;
-  });
-
-  // Kullanıcı bu ilanın kurucusu mu?
-  const ownerId = team.olusturanId?._id || team.olusturanId;
-  const isOwner = ownerId && currentIdStr && String(ownerId).trim().toLowerCase() === currentIdStr;
-  console.log('Kurucu mu?:', isOwner);
-
-  // --- 3. BACKEND AKSİYONLARI ---
-
-  // Ekibe Katılma İşlemi
   const handleJoinTeam = async () => {
     try {
       setLoading(true);
-      await TeamService.joinTeam(team._id); // API'ye istek gidiyor
+      await TeamService.joinTeam(team._id);
       Alert.alert("Tebrikler!", "Ekibe başarıyla katıldınız.");
-      if (onSuccess) onSuccess(); // Ana sayfadaki listeyi yenile
-      onClose(); // Modalı kapat
+      if (onSuccess) onSuccess();
+      onClose();
     } catch (error) {
-      // Backend'den fırlattığın 'TEAM_FULL' veya 'ALREADY_MEMBER' hatasını yakala
-      const errorMessage =
-        error.response?.data?.message || "Ekibe katılırken bir hata oluştu.";
-      Alert.alert("Katılamadınız", errorMessage);
+      const errorMessage = error.response?.data?.message || "Hata oluştu.";
+      Alert.alert("Hata", errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Ekipten Ayrılma İşlemi
   const handleLeaveTeam = async () => {
-    // Önce kullanıcıya emin misin diye soralım (UX için iyidir)
-    Alert.alert(
-      "Ekipten Ayrıl",
-      "Bu ekipten ayrılmak istediğinize emin misiniz?",
-      [
-        { text: "Vazgeç", style: "cancel" },
-        {
-          text: "Ayrıl",
-          style: "destructive",
-          onPress: async () => {
-            try {
-              setLoading(true);
-              await TeamService.leaveTeam(team._id); // API'ye ayrılma isteği
-              Alert.alert("Bilgi", "Ekipten ayrıldınız.");
-              if (onSuccess) onSuccess();
-              onClose();
-            } catch (error) {
-              // Backend'den gelen 'OWNER_CANNOT_LEAVE' hatası burada yakalanır
-              const errorMessage =
-                error.response?.data?.message || "Ayrılırken bir hata oluştu.";
-              Alert.alert("Hata", errorMessage);
-            } finally {
-              setLoading(false);
-            }
-          },
+    Alert.alert("Ekipten Ayrıl", "Emin misiniz?", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Ayrıl",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setLoading(true);
+            await TeamService.leaveTeam(team._id);
+            Alert.alert("Bilgi", "Ekipten ayrıldınız.");
+            if (onSuccess) onSuccess();
+            onClose();
+          } catch (_error) {
+            // Backend'den gelen özel bir hata mesajı varsa onu, yoksa varsayılan metni gösterelim
+            const backendMesaji =
+              _error.response?.data?.message || "Ayrılırken bir hata oluştu.";
+            Alert.alert("Hata", backendMesaji);
+          } finally {
+            setLoading(false);
+          }
         },
-      ],
-    );
+      },
+    ]);
   };
 
-  // --- 4. BUTON RENDER MANTIĞI ---
-  const renderActionButton = () => {
-    if (loading) {
-      return (
-        <View style={[styles.mainButton, { backgroundColor: "#6C757D" }]}>
-          <ActivityIndicator color="white" />
-        </View>
-      );
-    }
+  const handleDeleteTeam = async () => {
+    Alert.alert("İlanı Sil", "Bu işlem geri alınamaz!", [
+      { text: "Vazgeç", style: "cancel" },
+      {
+        text: "Sil",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            setLoading(true);
+            await TeamService.deleteTeam(team._id);
+            Alert.alert("Başarılı", "İlan silindi.");
+            if (onSuccess) onSuccess();
+            onClose();
+          } catch (_error) {
+            Alert.alert("Hata", "Silinirken bir hata oluştu.");
+          } finally {
+            setLoading(false);
+          }
+        },
+      },
+    ]);
+  };
 
-    // 1. Durum: İlanı açan kişi kendisiyse
+  // --- 4. BUTON MANTIĞI ---
+  const renderActionButton = () => {
+    if (loading) return <ActivityIndicator color="#10b981" />;
+
+    // SAHİBİ İSE: Sil Butonu
     if (isOwner) {
       return (
-        <View style={[styles.mainButton, styles.disabledButton]}>
-          <Text style={styles.mainButtonText}>Kendi İlanınız</Text>
-        </View>
+        <TouchableOpacity
+          style={[styles.mainButton, { backgroundColor: "#ef4444" }]}
+          onPress={handleDeleteTeam}
+        >
+          <Text style={styles.mainButtonText}>İlanı Sil</Text>
+        </TouchableOpacity>
       );
     }
 
-    // 2. Durum: Zaten üyeyse "Ayrıl" butonu göster
+    // ÜYE İSE: Ayrıl Butonu
     if (isMember) {
       return (
         <TouchableOpacity
@@ -145,16 +142,16 @@ const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
       );
     }
 
-    // 3. Durum: Üye değil ama Kontenjan Dolu
+    // ÜYE DEĞİL AMA DOLU İSE
     if (!isOpen) {
       return (
         <View style={[styles.mainButton, styles.disabledButton]}>
-          <Text style={styles.mainButtonText}>Ekip Kontenjanı Dolu</Text>
+          <Text style={styles.mainButtonText}>Kontenjan Dolu</Text>
         </View>
       );
     }
 
-    // 4. Durum: Üye değil, yer de var (Katıl Butonu)
+    // ÜYE DEĞİL VE YER VARSA: Katıl Butonu
     return (
       <TouchableOpacity style={styles.mainButton} onPress={handleJoinTeam}>
         <Text style={styles.mainButtonText}>Ekibe Katıl</Text>
@@ -171,14 +168,9 @@ const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
     >
       <View style={styles.overlay}>
         <View style={styles.container}>
-          {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={onClose}
-              style={styles.closeButton}
-              disabled={loading}
-            >
-              <Ionicons name="arrow-back" size={24} color="#333" />
+            <TouchableOpacity onPress={onClose} style={styles.closeButton}>
+              <Ionicons name="arrow-back" size={24} color="#f8fafc" />
             </TouchableOpacity>
             <Text style={styles.headerTitle}>Ekip Detayı</Text>
             <View style={{ width: 24 }} />
@@ -190,13 +182,17 @@ const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
               <View
                 style={[
                   styles.badge,
-                  { backgroundColor: isOpen ? "#D1E7DD" : "#E2E3E5" },
+                  {
+                    backgroundColor: isOpen
+                      ? "rgba(16, 185, 129, 0.1)"
+                      : "rgba(148, 163, 184, 0.1)",
+                  },
                 ]}
               >
                 <Text
                   style={[
                     styles.badgeText,
-                    { color: isOpen ? "#1E7A42" : "#6C757D" },
+                    { color: isOpen ? "#10b981" : "#94a3b8" },
                   ]}
                 >
                   {statusText}
@@ -226,7 +222,6 @@ const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
             </Text>
           </ScrollView>
 
-          {/* Aksiyon Butonu */}
           <View style={styles.footer}>{renderActionButton()}</View>
         </View>
       </View>
@@ -234,11 +229,9 @@ const TeamDetailModal = ({ visible, onClose, team, onSuccess }) => {
   );
 };
 
+// ... Styles objen (Önceki mesajdakiyle aynı kalabilir)
 const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: "#020617", // Referanstaki safeArea rengiyle aynı
-  },
+  overlay: { flex: 1, backgroundColor: "#020617" },
   container: { flex: 1, paddingTop: 50 },
   header: {
     flexDirection: "row",
@@ -247,42 +240,31 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     marginBottom: 24,
   },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: "#f8fafc", // Off-white
-  },
+  headerTitle: { fontSize: 18, fontWeight: "700", color: "#f8fafc" },
   content: { paddingHorizontal: 24 },
   infoBox: { marginBottom: 24 },
   title: {
     fontSize: 28,
-    fontWeight: "900", // Daha vurgulu, logoText stili gibi
-    color: "#10b981", // Zümrüt yeşili
+    fontWeight: "900",
+    color: "#10b981",
     marginBottom: 12,
-    letterSpacing: -0.5,
   },
   badge: {
     alignSelf: "flex-start",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 10,
-    backgroundColor: "rgba(16, 185, 129, 0.15)",
   },
-  badgeText: { fontSize: 12, fontWeight: "bold", color: "#10b981" },
+  badgeText: { fontSize: 12, fontWeight: "bold" },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "700",
     marginTop: 24,
     marginBottom: 12,
-    color: "#f1f5f9", // Açık gri/beyaz
-    letterSpacing: 0.5,
-    textTransform: "uppercase", // Bölüm başlıklarını daha profesyonel yapar
+    color: "#f1f5f9",
+    textTransform: "uppercase",
   },
-  description: {
-    fontSize: 15,
-    color: "#94a3b8", // Slate 400
-    lineHeight: 24,
-  },
+  description: { fontSize: 15, color: "#94a3b8", lineHeight: 24 },
   tagContainer: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
   tag: {
     backgroundColor: "rgba(30, 41, 59, 0.5)",
@@ -298,33 +280,25 @@ const styles = StyleSheet.create({
     padding: 24,
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.05)",
-    backgroundColor: "rgba(2, 6, 23, 0.8)", // Sabit alt kısım için hafif transparan
   },
   mainButton: {
-    backgroundColor: "#10b981", // Ana aksiyon rengi
+    backgroundColor: "#10b981",
     padding: 18,
     borderRadius: 16,
     alignItems: "center",
-    shadowColor: "#10b981",
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 10,
-    elevation: 6,
   },
-  disabledButton: {
-    backgroundColor: "#1e293b",
-    opacity: 0.6,
-  },
+  mainButtonText: { color: "white", fontWeight: "800", fontSize: 16 },
+  disabledButton: { backgroundColor: "#1e293b", opacity: 0.6 },
   leaveButton: {
-    backgroundColor: "rgba(16, 185, 129, 0.15)", // Şeffaf YEŞİL arka plan (Tema rengi)
+    backgroundColor: "rgba(239, 68, 68, 0.15)",
     padding: 18,
     borderRadius: 16,
     alignItems: "center",
     borderWidth: 1,
-    borderColor: "rgba(16, 185, 129, 0.3)",
+    borderColor: "rgba(239, 68, 68, 0.3)",
   },
-  mainButtonText: { color: "white", fontWeight: "800", fontSize: 16 },
-  leaveButtonText: { color: "#10b981", fontWeight: "800", fontSize: 16 }, // YEŞİL metin
+  leaveButtonText: { color: "#ef4444", fontWeight: "800", fontSize: 16 },
+  closeButton: { padding: 8 },
 });
 
 export default TeamDetailModal;

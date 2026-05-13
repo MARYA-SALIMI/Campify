@@ -20,27 +20,13 @@ teamApi.interceptors.request.use(async (config) => {
 
     if (token) {
       // Backend'in "Kim bu?" sorusuna cevabımızı Header'a ekliyoruz
-      console.log("TeamApi Token gönderiliyor:", token.substring(0, 10) + "...");
       config.headers.Authorization = `Bearer ${token}`;
-    } else {
-      console.log("TeamApi Token BULUNAMADI!");
     }
   } catch (error) {
     console.log("Token okuma hatası:", error);
   }
   return config;
 });
-/*
-teamApi.interceptors.request.use(async (config) => {
-  // ŞİMDİLİK: Hafızadan çekmek yerine buraya çalışan bir token yazıyoruz
-  const tempToken = "ARKADASINDAN_ALDIGIN_UPUZUN_TOKEN_METNI"; 
-  
-  if (tempToken) {
-    config.headers.Authorization = `Bearer ${tempToken}`;
-  }
-  return config;
-});*/
-
 
 const TeamService = {
   /**
