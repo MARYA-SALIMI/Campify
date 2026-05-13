@@ -1,0 +1,35 @@
+name: Campify Backend CI/CD
+
+on:
+  push:
+    branches: [ emine, main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    # GitHub Secrets'tan gerçek bağlantıları çekiyoruz
+    env:
+      MONGO_URI: ${{ secrets.MONGO_URI }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      RABBITMQ_URL: ${{ secrets.RABBITMQ_URL }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        
+    - name: Install dependencies
+      run: npm install
+      working-directory: ./server
+
+    - name: Run Integration Test
+      # Bu adım gerçekten senin Upstash ve CloudAMQP'ne bağlanmaya çalışacak
+      run: npm test
+      working-directory: ./server
