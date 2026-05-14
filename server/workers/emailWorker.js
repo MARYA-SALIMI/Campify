@@ -17,19 +17,21 @@ app.listen(PORT, () => {
 async function sendWelcomeEmail(userData) {
     const transporter = nodemailer.createTransport({
         host: 'smtp.gmail.com',
-        port: 587,
-        secure: false, 
+        port: 465, // Portu 465, secure kısmını true yapalım (daha stabil bağlantı)
+        secure: true, 
         auth: {
             user: process.env.EMAIL_USER,
             pass: process.env.EMAIL_PASS
         },
         tls: {
+            // IPv6 hatasını aşmak için IPv4 zorlaması (bazı kütüphane sürümlerinde geçerli)
+            servername: 'smtp.gmail.com',
             rejectUnauthorized: false
         }
     });
 
     try {
-        console.log(`📤 Mail gönderiliyor: ${userData.userEmail}`);
+        console.log(`📤 Mail gönderiliyor (IPv4): ${userData.userEmail}`);
         await transporter.sendMail({
             from: `"Campify" <${process.env.EMAIL_USER}>`,
             to: userData.userEmail,
@@ -38,7 +40,7 @@ async function sendWelcomeEmail(userData) {
         });
         console.log(`📧 Mail başarıyla iletildi: ${userData.userEmail}`);
     } catch (error) {
-        console.error("❌ Mail Hatası:", error.message);
+        console.error("❌ SMTP Hatası Detayı:", error.message);
         throw error; 
     }
 }
