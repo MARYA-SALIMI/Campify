@@ -96,4 +96,22 @@ mongoose.connect(MONGO_URI)
     console.error("❌ MongoDB Connection Error:", err);
   });
 
+  app.get("/v1/test-rabbit", async (req, res) => {
+  try {
+    const amqp = require('amqplib');
+    const connection = await amqp.connect(process.env.RABBITMQ_URL);
+    const channel = await connection.createChannel();
+    await channel.assertQueue('test_queue', { durable: true });
+    
+    // Test mesajı gönder
+    channel.sendToQueue('test_queue', Buffer.from('Merhaba RabbitMQ!'));
+    
+    await channel.close();
+    await connection.close();
+    
+    res.status(200).json({ success: true, message: "RabbitMQ'ya test mesajı gönderildi!" });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "RabbitMQ Hatası: " + err.message });
+  }
+});
 module.exports = app;
