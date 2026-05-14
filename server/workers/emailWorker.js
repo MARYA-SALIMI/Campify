@@ -1,64 +1,34 @@
-const express = require('express');
-const amqp = require('amqplib');
 const nodemailer = require('nodemailer');
-require('dotenv').config();
 
-const app = express();
-const PORT = process.env.PORT || 10000;
-
-// Render'ın "uyuyakalmaması" için minik bir server
-app.get('/', (req, res) => res.send('Campify Mail Worker is Alive! ✅'));
-
-app.listen(PORT, () => {
-    console.log(`🚀 Worker dummy server running on port ${PORT}`);
-});
-
-// Mail Gönderim Fonksiyonu
 async function sendWelcomeEmail(userData) {
+    // Gmail için en stabil port 587'dir (STARTTLS)
     let transporter = nodemailer.createTransport({
-        service: 'gmail', // Veya kullandığın servis
+        host: 'smtp.gmail.com',
+        port: 587,
+        secure: false, // 587 için false olmalı
         auth: {
             user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS
+            pass: process.env.EMAIL_PASS // Buraya mutlaka App Password yazmalısın!
+        },
+        tls: {
+            rejectUnauthorized: false // Sertifika hatalarını görmezden gelmek için
         }
     });
 
     try {
+        console.log(`📤 Mail gönderiliyor: ${userData.userEmail}`);
+        
         await transporter.sendMail({
-            from: '"Campify" <no-reply@campify.com>',
-            to: userData.userEmail,
-            subject: "Campify'a Hoş Geldin!",
-            text: `Selam ${userData.name}, Kampüs ekosistemine başarıyla katıldın!`
+            from: `"Campify" <${process.env.EMAIL_USER}>`,
+            to: userData.userEmail, 
+            subject: userData.subject || "Campify'a Hoş Geldin!",
+            text: userData.content || "Kampüs ekosistemine katıldın!"
         });
+        
         console.log(`📧 Mail başarıyla gönderildi: ${userData.userEmail}`);
     } catch (error) {
-        console.error("❌ Mail gönderme hatası:", error);
+        // Hata durumunda mesajın neden gitmediğini detaylı görelim
+        console.error("❌ Mail gönderme hatası:", error.message);
+        throw error; // Hata fırlat ki mesaj 'Ack' edilmesin, tekrar denensin
     }
 }
-
-// RabbitMQ'dan Mesaj Dinleme (Consume)
-async function startWorker() {
-    try {
-        const connection = await amqp.connect(process.env.RABBITMQ_URL);
-        const channel = await connection.createChannel();
-        const queue = 'welcome_emails';
-
-        await channel.assertQueue(queue, { durable: true });
-        console.log(`[*] ${queue} kuyruğu dinleniyor...`);
-
-        channel.consume(queue, async (msg) => {
-            if (msg !== null) {
-                const userData = JSON.parse(msg.content.toString());
-                console.log(`[x] Mesaj alındı:`, userData);
-                
-                await sendWelcomeEmail(userData);
-                
-                channel.ack(msg); // Mesajı kuyruktan sil
-            }
-        });
-    } catch (error) {
-        console.error("❌ Worker RabbitMQ Hatası:", error);
-    }
-}
-
-startWorker();
