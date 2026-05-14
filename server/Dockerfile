@@ -14,4 +14,4 @@ COPY src/ ./src/
 EXPOSE 3000
 
 # index.js'in bulundugu kok dizinden baslat
-CMD ["node", "index.js"]
+CMD ["node", "src/server.js"]

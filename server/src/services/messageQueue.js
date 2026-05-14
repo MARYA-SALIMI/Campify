@@ -1,4 +1,4 @@
-const { getChannel, isRabbitMQAvailable, QUEUES } = require('../config/rabbitmq');
+const { getChannel, isRabbitMQAvailable, connectRabbitMQ, QUEUES } = require('../config/rabbitmq');
 
 /**
  * Belirtilen kuyruga bir event mesaji gonderir
@@ -8,13 +8,14 @@ const { getChannel, isRabbitMQAvailable, QUEUES } = require('../config/rabbitmq'
  * @param {object} eventData - Event verisi
  */
 const publishEvent = async (queue, eventData) => {
-  if (!isRabbitMQAvailable()) {
-    console.warn(`[MessageQueue] RabbitMQ bagli degil, event atlanis: ${eventData.type}`);
-    return false;
-  }
-
   try {
-    const channel = getChannel();
+    // Vercel gibi ortamlarda baglantinin hazir olmasini bekle
+    const channel = await connectRabbitMQ();
+    
+    if (!channel || !isRabbitMQAvailable()) {
+      console.warn(`[MessageQueue] RabbitMQ bagli degil, event atlandi: ${eventData.type}`);
+      return false;
+    }
     const message = {
       ...eventData,
       timestamp: new Date().toISOString(),

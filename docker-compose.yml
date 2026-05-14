@@ -22,8 +22,8 @@ services:
     environment:
       - PORT=3000
       - MONGODB_URI=mongodb://mongodb:27017/campify
-      - REDIS_URL=redis://redis:6379
-      - RABBITMQ_URL=amqp://campify:campify123@rabbitmq:5672
+      - REDIS_URL=rediss://default:gQAAAAAAAeJkAAIgcDE5M2U3MzkyMTc1ODI0NzVlOTRmNGNjN2JiN2ZkOTg0OA@feasible-louse-123492.upstash.io:6379
+      - RABBITMQ_URL=amqps://zbuajalz:yV2RWEPXz9lPN4phCAb6Je5qpiUIVvrM@collie.lmq.cloudamqp.com/zbuajalz
       - JWT_SECRET=${JWT_SECRET:-campify_jwt_secret_key_2024}
     networks:
       - campify-network
@@ -42,7 +42,7 @@ services:
       rabbitmq:
         condition: service_started
     environment:
-      - RABBITMQ_URL=amqp://campify:campify123@rabbitmq:5672
+      - RABBITMQ_URL=amqps://zbuajalz:yV2RWEPXz9lPN4phCAb6Je5qpiUIVvrM@collie.lmq.cloudamqp.com/zbuajalz
     networks:
       - campify-network
 

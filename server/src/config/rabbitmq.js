@@ -12,37 +12,49 @@ const QUEUES = {
 };
 
 const connectRabbitMQ = async () => {
+  if (isConnected && channel) return channel;
+  if (connectionPromise) return connectionPromise;
+
   const url = process.env.RABBITMQ_URL || 'amqp://localhost:5672';
 
-  try {
-    connection = await amqp.connect(url);
-    channel = await connection.createChannel();
+  connectionPromise = (async () => {
+    try {
+      connection = await amqp.connect(url);
+      channel = await connection.createChannel();
 
-    // Tum kuyruklari tanimla
-    for (const queue of Object.values(QUEUES)) {
-      await channel.assertQueue(queue, { durable: true });
+      // Tum kuyruklari tanimla
+      for (const queue of Object.values(QUEUES)) {
+        await channel.assertQueue(queue, { durable: true });
+      }
+
+      isConnected = true;
+      console.log('[RabbitMQ] Baglanti basarili.');
+
+      // Baglanti kapanirsa yeniden baglan
+      connection.on('close', () => {
+        isConnected = false;
+        connectionPromise = null;
+        console.warn('[RabbitMQ] Baglanti kapandi. 5 saniye sonra tekrar denenecek...');
+        setTimeout(connectRabbitMQ, 5000);
+      });
+
+      connection.on('error', (err) => {
+        isConnected = false;
+        connectionPromise = null;
+        console.warn('[RabbitMQ] Baglanti hatasi:', err.message);
+      });
+
+      return channel;
+    } catch (err) {
+      isConnected = false;
+      connectionPromise = null;
+      console.warn('[RabbitMQ] Baglanti basarisiz:', err.message);
+      // Vercel gibi ortamlarda hatayı fırlat ki istek hata dönsün ve bir sonraki istekte tekrar denesin
+      throw err; 
     }
+  })();
 
-    isConnected = true;
-    console.log('[RabbitMQ] Baglanti basarili.');
-
-    // Baglanti kapanirsa yeniden baglan
-    connection.on('close', () => {
-      isConnected = false;
-      console.warn('[RabbitMQ] Baglanti kapandi. 5 saniye sonra tekrar denenecek...');
-      setTimeout(connectRabbitMQ, 5000);
-    });
-
-    connection.on('error', (err) => {
-      isConnected = false;
-      console.warn('[RabbitMQ] Baglanti hatasi:', err.message);
-    });
-  } catch (err) {
-    isConnected = false;
-    console.warn('[RabbitMQ] Baglanti basarisiz:', err.message);
-    console.warn('[RabbitMQ] 5 saniye sonra tekrar denenecek...');
-    setTimeout(connectRabbitMQ, 5000);
-  }
+  return connectionPromise;
 };
 
 const getChannel = () => channel;
@@ -53,6 +65,7 @@ const closeRabbitMQ = async () => {
     if (channel) await channel.close();
     if (connection) await connection.close();
     isConnected = false;
+    connectionPromise = null;
     console.log('[RabbitMQ] Baglanti kapatildi.');
   } catch (err) {
     console.warn('[RabbitMQ] Kapatma hatasi:', err.message);
