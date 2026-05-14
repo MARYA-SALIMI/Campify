@@ -1,0 +1,50 @@
+name: Campify CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "Marya" ] # Hangi dallara push yapıldığında çalışsın?
+  pull_request:
+    branches: [ "Marya" ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    services:
+      # Testler sırasında Redis ve MongoDB ihtiyacı varsa burada tanımlanır
+      redis:
+        image: redis
+        ports:
+          - 6379:6379
+      mongodb:
+        image: mongo
+        ports:
+          - 27017:27017
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+
+    - name: Use Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+
+    - name: Install Dependencies
+      run: |
+        cd server
+        npm install
+
+    - name: Run Syntax Check (CI)
+      run: |
+        cd server
+        # Eğer testlerin varsa 'npm test' yazabilirsin. 
+        # Şimdilik sadece uygulamanın hatasız derlendiğini kontrol eder.
+        node --check src/app.js
+        node --check emailWorker.js 
+        echo "✅ Kod analizi başarıyla tamamlandı!"
+
+    - name: Build Success Message
+      run: echo "✅ CI Aşaması Başarıyla Tamamlandı!"
