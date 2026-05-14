@@ -70,6 +70,7 @@ exports.getPosts = async (req, res) => {
       // 1. Önce Redis'te cache var mı diye kontrol et
       const cachedPosts = await redisClient.get(cacheKey);
       if (cachedPosts) {
+        console.log("veri redisten getirildi.");
         return res.status(200).json(JSON.parse(cachedPosts));
       }
     } catch (redisErr) {
@@ -78,6 +79,7 @@ exports.getPosts = async (req, res) => {
 
     // 2. Cache'te yoksa MongoDB'den çek
     const posts = await postService.getAllPosts(page, limit, userId);
+    console.log("veri MongoDB'den getirildi.");
     
     try {
       // 3. Çekilen veriyi 3600 saniye (1 saat) süreliğine Redis'e kaydet
