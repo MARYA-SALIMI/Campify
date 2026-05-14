@@ -26,11 +26,11 @@ async function sendWelcomeEmail(userData) {
     try {
         await transporter.sendMail({
             from: '"Campify" <no-reply@campify.com>',
-            to: userData.email,
+            to: userData.userEmail,
             subject: "Campify'a Hoş Geldin!",
             text: `Selam ${userData.name}, Kampüs ekosistemine başarıyla katıldın!`
         });
-        console.log(`📧 Mail başarıyla gönderildi: ${userData.email}`);
+        console.log(`📧 Mail başarıyla gönderildi: ${userData.userEmail}`);
     } catch (error) {
         console.error("❌ Mail gönderme hatası:", error);
     }
