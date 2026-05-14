@@ -1,53 +1,53 @@
+const { Resend } = require('resend');
 const amqp = require('amqplib');
-const http = require('http');
 require('dotenv').config();
 
-const RABBIT_URL = process.env.RABBITMQ_URL;
+// Hata ayıklama için: Değişkenlerin gelip gelmediğini kontrol et
+console.log("🔍 Kontrol: RESEND_API_KEY var mı?", process.env.RESEND_API_KEY ? "Evet ✅" : "Hayır ❌");
+console.log("🔍 Kontrol: RABBITMQ_URL var mı?", process.env.RABBITMQ_URL ? "Evet ✅" : "Hayır ❌");
 
-async function processMessage(userData) {
-    // Sunumda hocanın göreceği kısım burası
-    console.log("--------------------------------------------------");
-    console.log(`📩 YENİ MESAJ KUYRUKTAN ALINDI`);
-    console.log(`👤 Kullanıcı: ${userData.userName}`);
-    console.log(`📧 E-posta: ${userData.userEmail}`);
-    console.log(`📝 İçerik: ${userData.content}`);
-    console.log("--------------------------------------------------");
-    
-    // Burada mail gönderiliyormuş gibi 1 saniye bekletiyoruz (Görsellik için)
-    return new Promise(resolve => setTimeout(resolve, 1000));
+const resend = new Resend(process.env.RESEND_API_KEY);
+
+async function sendWelcomeEmail(userData) {
+    try {
+        console.log(`📤 Mail gönderiliyor: ${userData.userEmail}`);
+        await resend.emails.send({
+            from: 'Campify <onboarding@resend.dev>',
+            to: userData.userEmail,
+            subject: userData.subject || "Campify'a Hoş Geldin!",
+            html: `<strong>Selam ${userData.userName}!</strong><p>${userData.content}</p>`
+        });
+        console.log(`📧 Mail başarıyla iletildi: ${userData.userEmail}`);
+    } catch (error) {
+        console.error("❌ Mail Gönderim Hatası:", error.message);
+    }
 }
 
 async function startWorker() {
     try {
-        const connection = await amqp.connect(RABBIT_URL);
+        const connection = await amqp.connect(process.env.RABBITMQ_URL);
         const channel = await connection.createChannel();
         const queue = 'welcome_emails';
 
         await channel.assertQueue(queue, { durable: true });
-        channel.prefetch(1); // Mesajları teker teker işle
-
-        console.log(`[*] ${queue} kuyruğu dinleniyor. Sunuma hazır! ✅`);
+        console.log(`[*] ${queue} kuyruğu dinleniyor...`);
 
         channel.consume(queue, async (msg) => {
             if (msg !== null) {
                 const userData = JSON.parse(msg.content.toString());
-                
-                // Mesajı işle (Ekrana yazdır)
-                await processMessage(userData);
-
-                // Mesajı kuyruktan başarıyla sil (Ack)
+                await sendWelcomeEmail(userData);
                 channel.ack(msg);
-                console.log(`✅ [RabbitMQ]: Mesaj başarıyla işlendi ve onaylandı (Ack).`);
             }
         });
-
     } catch (error) {
-        console.error("❌ Hata:", error.message);
-        setTimeout(startWorker, 5000);
+        console.error("❌ Worker Başlatılamadı:", error.message);
+        // Hata durumunda uygulamanın hemen kapanmaması için:
+        setTimeout(startWorker, 10000); 
     }
 }
 
-// Render'ın kapanmaması için basit sunucu
-http.createServer((req, res) => res.end('Campify Worker - Presentation Mode Active')).listen(process.env.PORT || 10000);
+// Render'ın "Port meşgul değil" hatası vermemesi için basit bir sunucu
+const http = require('http');
+http.createServer((req, res) => res.end('Worker is alive')).listen(process.env.PORT || 10000);
 
 startWorker();
