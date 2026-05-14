@@ -10,8 +10,13 @@ const postSchema = new mongoose.Schema({
         required: true 
     },
     authorId: { 
-        type: String, // Şimdilik testleri kolay geçmek için String yapıyoruz
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'User',
         required: true 
+    },
+    authorName: {
+        type: String,
+        default: 'Anonim'
     }
 }, { timestamps: true }); // Ne zaman eklendiğini otomatik kaydeder
 

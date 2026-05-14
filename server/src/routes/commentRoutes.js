@@ -14,4 +14,7 @@ router.put('/:commentId', commentController.updateComment);
 // DELETE: Yorum sil (/api/comments/:commentId)
 router.delete('/:commentId', commentController.deleteComment);
 
+// POST: Yorum beğen (/api/comments/:commentId/like)
+router.post('/:commentId/like', commentController.toggleLikeComment);
+
 module.exports = router;

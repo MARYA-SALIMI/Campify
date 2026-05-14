@@ -3,6 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 
+// Redis ve RabbitMQ entegrasyonu
+const { connectRedis } = require('./src/config/redis');
+const { connectRabbitMQ } = require('./src/config/rabbitmq');
+
 const app = express();
 app.use(express.json());
 
@@ -12,48 +16,68 @@ app.use(cors({
 }));
 
 
-// --- GÜVENLİK VE BAĞLANTI AYARI ---
+// --- GÜVENLIK VE BAGLANTI AYARI ---
 const dbURI = process.env.MONGODB_URI;
 
 const connectDB = async () => {
-    // Zaten bağlıysak tekrar deneme
+    // Zaten bagliysa tekrar deneme
     if (mongoose.connection.readyState >= 1) return;
 
-    // Değişken boş mu kontrolü
+    // Degisken bos mu kontrolu
     if (!dbURI) {
-        throw new Error("MONGODB_URI değişkeni Vercel'de tanımlanmamış! Settings > Environment Variables kısmına eklemelisin.");
+        throw new Error("MONGODB_URI degiskeni tanimlanmamis! Settings > Environment Variables kismina eklemelisin.");
     }
 
     try {
         await mongoose.connect(dbURI, { 
             serverSelectionTimeoutMS: 10000 // 10 saniye bekle
         });
-        console.log('MongoDB Bağlantısı Başarılı! 🚀');
+        console.log('MongoDB Baglantisi Basarili!');
     } catch (err) {
-        // Hata türüne göre detay verelim
+        // Hata turune gore detay verelim
         if (err.message.includes('Invalid scheme')) {
-            throw new Error("Link formatı hatalı! Link 'mongodb+srv://' ile başlamalı. Başına tırnak veya boşluk koymadığından emin ol.");
+            throw new Error("Link formati hatali! Link 'mongodb+srv://' ile baslamali.");
         }
         throw err;
     }
 };
 
-// --- HATA YAKALAYICI (POSTMAN'DE GÖRECEĞİN KISIM) ---
+// --- Redis ve RabbitMQ Baslat ---
+connectRedis();
+connectRabbitMQ();
+
+// --- HATA YAKALAYICI ---
 app.use(async (req, res, next) => {
     try {
         await connectDB();
         next();
     } catch (err) {
         res.status(500).json({
-            durum: "Veritabanı Hatası",
+            durum: "Veritabani Hatasi",
             mesaj: err.message,
-            ipucu: "Vercel panelindeki MONGODB_URI değerini kontrol et ve tekrar 'Redeploy' yap."
+            ipucu: "MONGODB_URI degerini kontrol et."
         });
     }
 });
 
 // --- ROTALAR ---
-app.get('/', (req, res) => res.send("Campify API Safe & Running! 🚀"));
+app.get('/', (req, res) => res.send("Campify API Safe & Running!"));
+
+// Sistem durumu endpoint'i (Redis, RabbitMQ, MongoDB durum kontrolu)
+const { isRedisAvailable } = require('./src/config/redis');
+const { isRabbitMQAvailable } = require('./src/config/rabbitmq');
+
+app.get('/api/health', (req, res) => {
+    res.status(200).json({
+        status: 'OK',
+        services: {
+            mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+            redis: isRedisAvailable() ? 'connected' : 'disconnected',
+            rabbitmq: isRabbitMQAvailable() ? 'connected' : 'disconnected',
+        },
+        timestamp: new Date().toISOString(),
+    });
+});
 
 const commentRoutes = require('./src/routes/commentRoutes');
 app.use('/api/comments', commentRoutes);
@@ -62,7 +86,7 @@ const chatRoutes = require('./src/routes/chatRoutes');
 app.use('/api/chat', chatRoutes);
 
 const postRoutes = require('./src/routes/postRoutes');
-app.use('/api', postRoutes);
+app.use('/api/posts', postRoutes);
 
 const authRoutes = require('./src/routes/authRoutes');
 app.use('/api/auth', authRoutes);

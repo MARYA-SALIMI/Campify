@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # =============================================
+  # Backend API Servisi
+  # =============================================
+  backend:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: campify-backend
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    depends_on:
+      mongodb:
+        condition: service_started
+      redis:
+        condition: service_started
+      rabbitmq:
+        condition: service_started
+    environment:
+      - PORT=3000
+      - MONGODB_URI=mongodb://mongodb:27017/campify
+      - REDIS_URL=redis://redis:6379
+      - RABBITMQ_URL=amqp://campify:campify123@rabbitmq:5672
+      - JWT_SECRET=${JWT_SECRET:-campify_jwt_secret_key_2024}
+    networks:
+      - campify-network
+
+  # =============================================
+  # Notification Worker (RabbitMQ Consumer)
+  # =============================================
+  notification-worker:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: campify-notification-worker
+    restart: unless-stopped
+    command: node src/workers/notificationWorker.js
+    depends_on:
+      rabbitmq:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=amqp://campify:campify123@rabbitmq:5672
+    networks:
+      - campify-network
+
+  # =============================================
+  # MongoDB Veritabani
+  # =============================================
+  mongodb:
+    image: mongo:7
+    container_name: campify-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - campify-network
+
+  # =============================================
+  # Redis Cache
+  # =============================================
+  redis:
+    image: redis:7-alpine
+    container_name: campify-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - campify-network
+
+  # =============================================
+  # RabbitMQ Mesaj Kuyrugu
+  # =============================================
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: campify-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - RABBITMQ_DEFAULT_USER=campify
+      - RABBITMQ_DEFAULT_PASS=campify123
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - campify-network
+
+# =============================================
+# Volumes (Kalici Veri)
+# =============================================
+volumes:
+  mongo_data:
+    driver: local
+  redis_data:
+    driver: local
+  rabbitmq_data:
+    driver: local
+
+# =============================================
+# Network
+# =============================================
+networks:
+  campify-network:
+    driver: bridge

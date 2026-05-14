@@ -13,17 +13,31 @@ const getComments = async (req, res) => {
 const addComment = async (req, res) => {
     try {
         const { postId } = req.params;
-        const { authorId, text } = req.body; // React'ten gelen veriler
+        const { authorId, text, authorName, parentId, replyToName } = req.body; // React'ten gelen veriler
 
         // Şemadaki zorunlu alanların kontrolü
         if (!authorId || !text) {
             return res.status(400).json({ mesaj: "Yazar ID ve metin (text) zorunludur." });
         }
 
-        const newComment = await commentService.createComment(postId, authorId, text);
+        const newComment = await commentService.createComment(postId, authorId, text, authorName, parentId, replyToName);
         res.status(201).json(newComment);
     } catch (error) {
         res.status(500).json({ mesaj: "Yorum kaydedilemedi", hata: error.message });
+    }
+};
+
+const toggleLikeComment = async (req, res) => {
+    try {
+        const { commentId } = req.params;
+        const { userId, userName } = req.body;
+        if (!userId) return res.status(400).json({ mesaj: "userId zorunludur." });
+
+        const updated = await commentService.toggleLikeComment(commentId, userId, userName);
+        if (!updated) return res.status(404).json({ mesaj: "Yorum bulunamadı." });
+        res.status(200).json(updated);
+    } catch (error) {
+        res.status(500).json({ mesaj: "Beğeni işlemi başarısız", hata: error.message });
     }
 };
 
@@ -65,5 +79,6 @@ module.exports = {
     getComments,
     addComment,
     updateComment,
-    deleteComment
+    deleteComment,
+    toggleLikeComment
 };
