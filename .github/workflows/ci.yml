@@ -1,0 +1,27 @@
+name: Campify CI/CD Pipeline
+
+on:
+  push:
+    branches: [ "sinemhavan" ]
+  pull_request:
+    branches: [ "sinemhavan" ]
+
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: 📥 Kodu GitHub'dan Çek
+      uses: actions/checkout@v3
+
+    - name: ⚙️ Node.js Ortamını Kur
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18.x'
+
+    - name: 📦 Bağımlılıkları Yükle (npm install)
+      run: npm install
+
+    - name: 🐳 Docker İmajını Derle (Test)
+      run: docker build -t campify-backend:ci-test .
