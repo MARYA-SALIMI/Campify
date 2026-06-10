@@ -3,6 +3,7 @@ const amqp = require('amqplib');
 let connection = null;
 let channel = null;
 let isConnected = false;
+let connectionPromise = null;
 
 const QUEUES = {
   POST_EVENTS: 'post_events',

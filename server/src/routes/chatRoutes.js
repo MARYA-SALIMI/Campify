@@ -9,8 +9,8 @@ router.post('/', chatController.createMessage);
 // 2. Tüm mesajları listele (GET -> /api/chat)
 router.get('/', chatController.getMessages);
 
-// 3. Mesaj sil (DELETE -> /api/chat/:messageId)
-router.delete('/:messageId', chatController.deleteMessage);
+// 3. Mesaj sil (DELETE -> /api/chat/:messageId) — Sadece mesajı gönderen silebilir
+router.delete('/:messageId', authMiddleware, chatController.deleteMessage);
 
 // 4. Mesaj düzenle (PUT -> /api/chat/:messageId)
 router.put('/:messageId', authMiddleware, chatController.updateMessage);

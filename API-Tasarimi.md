@@ -219,11 +219,11 @@ paths:
               sampleUpdate:
                 summary: Profil güncelleme örneği
                 value:
-                  ad: Marya
-                  soyad: Salimi
-                  bolum: Bilgisayar Mühendisliği
-                  ilgi_alanlari: ["Makine Öğrenmesi"]
-                  yetenekler: ["Python", "TensorFlow"]
+                  firstName: Marya
+                  lastName: Salimi
+                  department: Bilgisayar Mühendisliği
+                  interests: ["Makine Öğrenmesi"]
+                  skills: ["Python", "TensorFlow"]
       responses:
         "200":
           description: Güncelleme başarılı
@@ -946,7 +946,6 @@ components:
       required: true
       schema:
         type: string
-        format: uuid
       description: Kullanıcı benzersiz ID'si
 
   schemas:
@@ -1018,7 +1017,6 @@ components:
       properties:
         id:
           type: string
-          format: uuid
           description: Kullanıcının benzersiz kimliği
           example: "123e4567-e89b-12d3-a456-426614174000"
         firstName:

@@ -4,3 +4,4 @@ client/.env
 server/.env
 .vercel/
 dist/
+.DS_Store

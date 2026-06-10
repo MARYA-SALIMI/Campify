@@ -21,9 +21,16 @@ const TeamList = ({ teams = [], currentUserId, onSelectTeam }) => {
   return (
     <div className="tl-grid">
       {teams.map((team) => {
+<<<<<<< HEAD
         const isOwner = team.ownerId === currentUserId;
         const isMember = team.members?.includes(currentUserId);
         const isFull = team.members?.length >= team.capacity;
+=======
+      const isOwner = team.ownerId && currentUserId ? team.ownerId.toString() === currentUserId.toString() : false;
+      const isMember = team.members?.some(id => id && currentUserId && id.toString() === currentUserId.toString());
+  
+      const isFull = (team.members?.length || 0) >= (team.capacity || 0);
+>>>>>>> 9124b8ba3ac5117ae373ba07500183d7b6f14971
 
         return (
           <div

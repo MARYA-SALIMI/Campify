@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 .env
 node_modules/
 .vercel
 *.log
+=======
+node_modules/
+.env
+>>>>>>> 9124b8ba3ac5117ae373ba07500183d7b6f14971

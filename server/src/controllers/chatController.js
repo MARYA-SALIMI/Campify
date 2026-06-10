@@ -44,10 +44,20 @@ exports.getMessages = async (req, res) => {
     }
 };
 
-// Mesaj Sil
+// Mesaj Sil — Sadece mesajı gönderen kişi silebilir
 exports.deleteMessage = async (req, res) => {
     try {
         const { messageId } = req.params;
+        
+        // Yetki kontrolü: Sadece mesajı gönderen silebilir
+        const message = await Chat.findById(messageId);
+        if (!message) {
+            return res.status(404).json({ message: "Mesaj bulunamadı." });
+        }
+        if (message.from.toString() !== req.userId) {
+            return res.status(403).json({ message: "Bu mesajı silme yetkiniz yok." });
+        }
+
         await Chat.findByIdAndDelete(messageId);
         res.status(200).json({ message: "Mesaj başarıyla silindi." });
     } catch (error) {
